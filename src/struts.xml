@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE struts PUBLIC
+"-//Apache Software Foundation//DTD Struts Configuration 2.0//EN"
+"http://struts.apache.org/dtds/struts-2.0.dtd">
+
+<struts>    
+	<package name="admin" namespace="/admin" extends="struts-default">
+		<interceptors>
+			<interceptor name="loginInterceptor" class="edu.utk.mabe.scopelab.scope.admin.interceptor.LoginInterceptor" />
+			<interceptor name="ExceptionHandlingInterceptor" class="edu.utk.mabe.scopelab.scope.admin.interceptor.ExceptionHandlingInterceptor" />
+			<interceptor-stack name="adminStack">
+				<interceptor-ref name="defaultStack" />
+				<interceptor-ref name="ExceptionHandlingInterceptor" />
+				<interceptor-ref name="loginInterceptor" />
+			</interceptor-stack>
+		</interceptors>
+		
+		
+		
+		<global-results>
+            <result name="streamOutput" type="stream">
+                <param name="contentType">application/json;charset=utf-8</param>
+                <param name="inputName">inputStream</param>
+            </result>
+            <result name="mainPage">/WEB-INF/pages/admin/adminPage.jsp</result>
+             <result name="stacktracePage">/WEB-INF/pages/admin/stacktracePage.jsp</result>
+        </global-results>
+		
+		
+		<!--  Gets the main page -->
+        <action name="getMainPage" class="edu.utk.mabe.scopelab.scope.admin.action.GetMainPage">
+            <result name="mainPage">/WEB-INF/pages/admin/adminPage.jsp</result>
+        </action>
+     
+        <!-- Gets the server status page -->
+        <action name="getServerStatusPage" 
+                class="edu.utk.mabe.scopelab.scope.admin.action.GetServerStatusPage">
+            <interceptor-ref name="adminStack" />
+            <result name="serverStatusPage">/WEB-INF/pages/admin/serverStatusPage.jsp</result>
+        </action>
+     
+        <!-- Server start page  -->
+        <action name="getServerPageAction" 
+                class="edu.utk.mabe.scopelab.scope.admin.action.GetServerPageAction">
+            <interceptor-ref name="adminStack" />
+            <result name="configureServerPage">/WEB-INF/pages/admin/configureServerPage.jsp</result>
+        </action>
+ 
+        <action name="startServerAction" 
+                class="edu.utk.mabe.scopelab.scope.admin.action.StartServerAction">
+            <interceptor-ref name="adminStack" />
+        </action>
+ 
+ 
+ 
+        <!-- Data Call -->
+        <action name="getNetworkInterfacesAction" 
+                class="edu.utk.mabe.scopelab.scope.admin.action.GetNetworkInterfacesAction">
+            <interceptor-ref name="adminStack" />
+        </action>
+ 
+     
+        <action name="getCreateSessionPage" class="edu.utk.mabe.scopelab.scope.admin.action.GetCreateSessionPage">
+            <interceptor-ref name="adminStack" />
+            <result name="createSessionPage">/WEB-INF/pages/admin/createSessionPage.jsp</result>
+        </action>
+        
+        <action name="createSession" class="edu.utk.mabe.scopelab.scope.admin.action.CreateSessionAction">
+            <interceptor-ref name="adminStack" />
+            <result name="input">/WEB-INF/pages/admin/createSessionPage.jsp</result>
+        </action>
+        
+       
+        
+        
+        
+        <action name="getBackendStoragePage" 
+                class="edu.utk.mabe.scopelab.scope.admin.action.GetBackendStoragePageAction">
+            <interceptor-ref name="adminStack" />
+            <result name="backendStoragePage">/WEB-INF/pages/admin/backendStoragePage.jsp</result>
+        </action>
+        
+        <action name="InitializeBackendStorageAction"
+                class="edu.utk.mabe.scopelab.scope.admin.action.InitializeBackendStorageAction">
+             <interceptor-ref name="adminStack" />
+             <result name="backendStoragePage">/WEB-INF/pages/admin/backendStoragePage.jsp</result>
+        </action>
+ 
+        <action name="logout" class="edu.utk.mabe.scopelab.scope.admin.action.LogoutAction">
+            <interceptor-ref name="adminStack" />
+            <result name="logout">/WEB-INF/pages/admin/logoutPage.jsp</result>
+        </action>
+        
+         
+        <action name="*" class="edu.utk.mabe.scopelab.scope.admin.action.GetMainPage">
+            <result name="mainPage">/WEB-INF/pages/admin/adminPage.jsp</result>
+        </action>
+       
+	</package>
+	
+	<package name="participant" namespace="/participant" extends="struts-default">
+	   <interceptors>
+            <interceptor name="loginInterceptor" class="edu.utk.mabe.scopelab.scope.participant.interceptor.LoginInterceptor" />
+            <interceptor-stack name="participantStack">
+                <interceptor-ref name="defaultStack" />
+                <interceptor-ref name="loginInterceptor" />
+            </interceptor-stack>
+        </interceptors>
+        
+        <default-interceptor-ref name="participantStack" />
+        
+        <global-results>
+            <result name="login">/WEB-INF/pages/participant/loginPage.jsp</result>
+        </global-results>
+        
+        <action name="getMainPage" class="edu.utk.mabe.scopelab.scope.participant.action.GetMainPageAction">
+            <result name="mainPage">/WEB-INF/pages/participant/mainPage.jsp</result>
+        </action>
+        
+        <action name="logout" class="edu.utk.mabe.scopelab.scope.participant.action.LogoutAction">
+            <result name="logout">/WEB-INF/pages/participant/logoutPage.jsp</result>
+        </action>
+        
+        <action name="*" class="edu.utk.mabe.scopelab.scope.participant.action.GetMainPageAction">
+            <result name="mainPage">/WEB-INF/pages/participant/mainPage.jsp</result>
+        </action>
+	</package>
+</struts>
+
+

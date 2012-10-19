@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<web-app xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://java.sun.com/xml/ns/javaee" xmlns:web="http://java.sun.com/xml/ns/javaee/web-app_2_5.xsd" xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_3_0.xsd" id="WebApp_ID" version="3.0">
+  <display-name>ScopeProject</display-name>
+  <welcome-file-list>
+    <welcome-file>index.jsp</welcome-file>
+  </welcome-file-list>
+  <filter>
+  	<filter-name>struts2</filter-name>
+  	<filter-class>org.apache.struts2.dispatcher.ng.filter.StrutsPrepareAndExecuteFilter</filter-class>
+    <init-param>
+        <param-name>struts.ognl.allowStaticMethodAccess</param-name>
+        <param-value>true</param-value>
+    </init-param>
+  </filter>
+  <filter-mapping>
+  	<filter-name>struts2</filter-name>
+  	<url-pattern>/*</url-pattern>
+  </filter-mapping>
+  <listener>
+  	<listener-class>edu.utk.mabe.scopelab.scope.ScopeServletContextListener</listener-class>
+  </listener>
+
+  <!-- Environmental variables -->
+  
+  <!-- Admin Username -->
+  <env-entry>
+    <env-entry-name>scope.admin.username</env-entry-name>
+    <env-entry-type>java.lang.String</env-entry-type>
+    <env-entry-value>scope_admin</env-entry-value>
+  </env-entry>
+  
+  <!-- Admin password -->
+  <env-entry>
+    <env-entry-name>scope.admin.password</env-entry-name>
+    <env-entry-type>java.lang.String</env-entry-type>
+    <env-entry-value>scope123</env-entry-value>
+  </env-entry>
+  
+  <!-- Cassandra host -->
+  <env-entry>
+    <env-entry-name>scope.admin.backend.host</env-entry-name>
+    <env-entry-type>java.lang.String</env-entry-type>
+    <env-entry-value>localhost</env-entry-value>
+  </env-entry>
+  
+  <!-- Cassandra port -->
+  <env-entry>
+    <env-entry-name>scope.admin.backend.port</env-entry-name>
+    <env-entry-type>java.lang.String</env-entry-type>
+    <env-entry-value>9160</env-entry-value>
+    
+  </env-entry>
+  
+</web-app>
