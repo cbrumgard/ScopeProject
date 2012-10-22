@@ -48,8 +48,6 @@ public class StartServerAction extends BaseScopeAction
 	@Override
 	public String execute() throws Exception 
 	{
-		String nextPage;
-		
 		System.out.println("Inside of Start Server Action");
 		System.out.printf("Hostname = %s Port = %d\n", hostname, port);
 	
@@ -63,7 +61,7 @@ public class StartServerAction extends BaseScopeAction
 			/* Error since there is already a server running */
 			if(scopeServer != null)
 			{
-
+				return setErrorMessage("Server is already running");
 			}
 
 			/* Creates and starts the scope server */
@@ -76,11 +74,6 @@ public class StartServerAction extends BaseScopeAction
 		}
 
 		/* Server page */
-		nextPage = "serverPage";
-
-
-		
-		/* Next page to visit */
-		return nextPage;
+		return "serverPage";
 	}
 }

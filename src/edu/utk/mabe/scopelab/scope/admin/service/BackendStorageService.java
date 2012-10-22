@@ -6,6 +6,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Collection;
+import java.util.Hashtable;
 import java.util.UUID;
 
 import javax.naming.Context;
@@ -32,19 +33,33 @@ public class BackendStorageService
 	protected Connection conn = null;
 	protected boolean 	 isInitialized = false;
 	
+
 	public BackendStorageService() 
-			throws ClassNotFoundException, SQLException, NamingException
+			throws NamingException, ClassNotFoundException, SQLException 
 	{
-		Context env = (Context)new InitialContext().lookup("java:comp/env");
+		Context env =  (Context)new InitialContext().lookup("java:comp/env");
+		
+		init((String)env.lookup("scope.admin.backend.host"), 
+			 (String)env.lookup("scope.admin.backend.port"));
+	}
 	
+	public BackendStorageService(String hostname, String port) 
+			throws ClassNotFoundException, SQLException
+	{
+		init(hostname, port);
+	}
+	
+	protected void init(String hostname, String port) 
+		throws ClassNotFoundException, SQLException
+	{
 		/* Loads the driver class */
 		Class.forName(driverClassName);
 		
 		/* Gets a connection to cassandra */
 		conn = DriverManager.getConnection(
 						String.format("jdbc:cassandra://%s:%s/system", 
-									  env.lookup("scope.admin.backend.host"),
-									  env.lookup("scope.admin.backend.port")));
+							hostname, port));
+									  
 		
 		ResultSet rs = null;
 		

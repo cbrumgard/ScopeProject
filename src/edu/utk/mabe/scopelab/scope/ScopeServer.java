@@ -63,7 +63,8 @@ public class ScopeServer
 		connection.start();
 		
 		/* Access the backend store */
-		final BackendStorageService backendStorageService = new BackendStorageService();
+		final BackendStorageService backendStorageService = 
+				new BackendStorageService("localhost", "9160"); //new BackendStorageService();
 		
 
 		/* Schedule repeated task to register server */
@@ -83,5 +84,11 @@ public class ScopeServer
 					}
 					
 				}, 0, 30*1000);
+	}
+	
+	public static void main(String[] args) throws NumberFormatException, Exception
+	{
+		ScopeServer scopeServer = new ScopeServer(args[0], Integer.parseInt(args[1]));
+		scopeServer.start();
 	}
 }
