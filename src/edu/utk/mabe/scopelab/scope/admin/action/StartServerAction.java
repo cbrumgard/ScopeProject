@@ -5,8 +5,11 @@ import javax.servlet.ServletContext;
 
 
 
+import net.sf.json.JSONObject;
+
 import org.apache.struts2.util.ServletContextAware;
 
+import edu.utk.mabe.scopelab.scope.BaseScopeAction;
 import edu.utk.mabe.scopelab.scope.ScopeServer;
 
 public class StartServerAction extends BaseScopeAction 
@@ -64,16 +67,22 @@ public class StartServerAction extends BaseScopeAction
 				return setErrorMessage("Server is already running");
 			}
 
+			System.out.println("Inside of Start Server Action 1");
+			
 			/* Creates and starts the scope server */
 			scopeServer = new ScopeServer(hostname, port);
+			
+			System.out.println("Inside of Start Server Action 2");
 			scopeServer.start();
+			
+			System.out.println("Inside of Start Server Action 3");
 
 			/* Stores the references to the scope server for later use */
 			servletContext.setAttribute("edu.utk.mabe.scopelab.scope.ScopeServer", 
 					scopeServer);
 		}
 
-		/* Server page */
-		return "serverPage";
+		/* Send a success full result back */
+		return setDataMessage(new JSONObject());
 	}
 }

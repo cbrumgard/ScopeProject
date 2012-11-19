@@ -3,6 +3,7 @@ package edu.utk.mabe.scopelab.scope.admin.action;
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 
+import edu.utk.mabe.scopelab.scope.BaseScopeAction;
 import edu.utk.mabe.scopelab.scope.admin.service.BackendStorageService;
 
 public class GetBackendStoragePageAction extends BaseScopeAction

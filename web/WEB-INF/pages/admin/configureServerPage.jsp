@@ -86,8 +86,16 @@
     			   url: "/ScopeProject/admin/startServerAction",
     			   async: true,
     			   type: "POST",
-    	
-    			   data: { hostname: hostname, port: port}
+    			   data: { hostname: hostname, port: port},
+    		   
+    		       success: function(dataObject, textStatus, jqXHR)
+    		       {
+    		    	   processJSONResult(dataObject, 
+    		    			   function() 
+    		    			   { 
+    		    		          jQuery("#progress-dialog").dialog("close");
+    		    			   });   
+    		       }
     		   });
     	
     }
@@ -127,7 +135,7 @@ to run the server.
         </tr>
         <tr>
             <td>Port:</td>
-            <td><input type="text" id="port" value="61616"/></td>
+            <td><input type="text" id="port" value="5001"/></td>
         </tr>
         <tr>
             <td></td>

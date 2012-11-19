@@ -44,6 +44,9 @@ public class ExceptionHandlingInterceptor implements Interceptor
 			
 		}catch(Throwable e)
 		{
+			System.out.println("Exception thrown");
+			e.printStackTrace();
+			
 			/* Gets the stack trace */
 			ByteArrayOutputStream stackTrace = new ByteArrayOutputStream();
 			e.printStackTrace(new PrintStream(stackTrace));

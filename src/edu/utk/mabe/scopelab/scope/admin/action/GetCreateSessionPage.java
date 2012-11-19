@@ -1,5 +1,7 @@
 package edu.utk.mabe.scopelab.scope.admin.action;
 
+import edu.utk.mabe.scopelab.scope.BaseScopeAction;
+
 
 public class GetCreateSessionPage extends BaseScopeAction 
 {

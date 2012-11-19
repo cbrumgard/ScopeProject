@@ -4,6 +4,8 @@ import java.io.InputStream;
 
 import org.apache.kahadb.util.ByteArrayInputStream;
 
+import edu.utk.mabe.scopelab.scope.BaseScopeAction;
+
 public class GetTestPage extends BaseScopeAction 
 {
 	/* Serialization stuff */

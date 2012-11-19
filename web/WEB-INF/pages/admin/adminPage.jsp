@@ -14,202 +14,83 @@
     
    
     <!-- Functions -->
-    <script type="text/javascript">
-    
-    function getTestPage(url, params)
-    {
-    	console.log("Params ="+params);
-    	
-    	// Sends an async request for the page
-    	jQuery.ajax({url:      url,
-    		         //dataType: "json",
-    		         async:    true,
-    		         data: params,
-    		         error: function(jqXHR, textStatus, errorThrown)
-    		         {
-    		        	 jQuery("#main_div").html(textStatus);  
-    		         },
-    		         
-    		         success: function(dataObject, textStatus, jqXHR)
-    		         {
-    		        	 console.log(dataObject);
-    		        	 
-    		        	 // Normal page return
-    		        	 if(typeof(dataObject) == "string")
-    		        	 {
-    		        		 console.log(dataObject);
-    		        		 jQuery("#main_div").html(dataObject);
-    		        		
-    		        	 // Json response object
-    		        	 }else
-    		        	 {
-    		        		 switch(dataObject.msgType)
-    		        		 {
-    		        			case "login":
-    		        			   jQuery("#login-dialog-url").val(dataObject.data);
-                                   jQuery("#login-dialog").dialog("open");
-    		        			   break;
-    		        			   
-    		        			case "stackTrace":
-    		        			   break;
-    		        			   
-    		        			case "error":
-    		        			   console.log(dataObject.data);
-                                   jQuery("#error-dialog-message").html(dataObject.data);
-                                   jQuery("#error-dialog").dialog("open");
-    		        			   break;
-    		        			   
-    		        			case "data":
-    		        			   break;
-    		        		 }
-    		        	 }
-    		         }
-    		         
-    	            }).done(function() { })
-    	              .fail(function() { })
-    	              .always(function() { });
-    }
-    
-    
-   
-    
-    jQuery(
-    	function() 
-    	{
-    		jQuery("#menu").menu(
-    			{
-    				select: function(event, ui)
-    				    {
-	    					var link = ui.item.children( "a:first" );
-	    	                
-	    					if (link.attr( "target" ) || event.metaKey || event.shiftKey || event.ctrlKey ) 
-	    	                {
-	    	                    return;
-	    	                }
-	    	                	
-	    					location.href = link.attr( "href" );
-	    					
-	    					switch(link.attr( "href" )) 
-	    					{
-	    					 
-								case "#serverPage":
-									getTestPage('/ScopeProject/admin/getServerStatusPage');
-									break;
-								
-								case "#configureServerPage":
-								    getTestPage('/ScopeProject/admin/getServerPageAction');
-									break;
-									
-								case "#backendstorage":
-									getTestPage('/ScopeProject/admin/getBackendStoragePage');
-									break;
-									
-								case "#createSession":
-									getTestPage('/ScopeProject/admin/getCreateSessionPage');
-                                    break;
-                                    
-								default:
-									break;
-							}
-    				    }	
-    			});
-    		
-    		
-    	});
-    
-    
-    // Login dialog box 
-    jQuery(function() 
-    	{
-    	    // login dialog
-	        jQuery("#login-dialog").dialog(
-	        	{ 
-	        		autoOpen: false,
-	        	    modal: true,
-	        	    buttons: 
-	        	       {
-			                Login: function() 
-			                {
-			                    var username = jQuery("#login-dialog-username").val();
-			                	var password = jQuery("#login-dialog-password").val();
-			                	var url      = jQuery("#login-dialog-url").val();
-			                	
-			                	console.log(username);
-			                	console.log(password);
-			                	console.log(url);
-			                	
-			                	// Get the url with the login credentials 
-			                	getTestPage(url, 
-				                		{
-				                		   'userID'   : username,
-				                		   'password' : password
-				                		});
-			                    
-			                	// Close the dialog box 
-			                    jQuery(this).dialog( "close" );
-			                }
-	                    }
-        });
-    });
-    
-    // Error dialog message
-    jQuery(function() 
-    { 
-    	jQuery("#error-dialog").dialog(
-    		{
-    			autoOpen: false,
-    			modal:    true,
-    			buttons:
-    				{
-    			        Ok: function()
-    			        {
-    			        	// Close the dialog box 
-                            jQuery(this).dialog( "close" );
-    			        }
-    				}
-    		});
-    });
-    
-    // Error dialog message
-    jQuery(function() 
-    { 
-        jQuery("#stacktrace-dialog").dialog(
-            {
-                autoOpen: false,
-                modal:    true,
-                width:    600,
-                buttons:
-                    {
-                        Ok: function()
-                        {
-                            // Close the dialog box 
-                            jQuery(this).dialog( "close" );
-                        }
-                    }
-            });
-    });
-    
-   
-    
-    </script>
+    <script src="/ScopeProject/resources/js/admin.js"></script>
     
     <style type="text/css">
-        body 
-        {
-            font-family: "Trebuchet MS", "Helvetica", "Arial",  "Verdana", "sans-serif";
-            font-size: 80%;
-        }
-      
-        h2.center { text-align: "center"; }
-        .ui-menu { width: 200px; margin-bottom: 2em; }
-        div.menu { width: 200px; background-color: white; float: left;  }
-        div.main { width: 600px; height: 100%; margin-left: 20px;  background-color: white; float: left; }
-        div.clear { clear: both;}
-    </style>
+/* 	body  */
+/* 	{ */
+/* 		font-family: "Trebuchet MS", "Helvetica", "Arial", "Verdana", */
+/* 			"sans-serif"; */
+/* 		font-size: 80%; */
+/* 	} */
+	
+	h2.center 
+	{
+		text-align: "center";
+	}
+	
+	.ui-menu 
+	{
+		width: 200px;
+		margin-bottom: 2em;
+		position:relative;
+        z-index:10000;
+	}
+	
+	div.menu 
+	{
+		width: 200px;
+		background-color: white;
+		float: left;
+	}
+	
+	div.main 
+	{
+		/*width: 600px; */
+		height: 100%;
+		margin-left: 20px;
+		background-color: white;
+		float: left;
+	}
+	
+	div.clear 
+	{
+		clear: both;
+	}
+	
+	body.main 
+	{
+	    font-family: "Trebuchet MS", "Helvetica", "Arial", "Verdana",
+            "sans-serif";
+        font-size: 80%;
+        
+		background-color: #e1ddd9;
+		font-size: 12px;
+		color: #564b47;
+		padding: 20px;
+		margin: 0px;
+		text-align: center;
+	}
+	
+	div.center_panel 
+	{
+		text-align: left;
+		vertical-align: middle;
+		margin: 0px auto;
+		padding: 0px;
+		width: 800px;
+		background-color: #ffffff;
+		border: 1px;
+		height: 600px;
+	}
+	</style>
     
 </head>
 
-<body>
+<body class="main">
+
+
+    <div class="center_panel" >
 
 
     <!-- login dialog -->
@@ -241,6 +122,9 @@
     <!-- Title -->
     <h2 class="center">Admin Page</h2><br />
     
+    <table>
+    <tr>
+    <td>
     <!-- Menu area -->
 	<div class="menu">
 	    <ul id="menu">
@@ -266,12 +150,18 @@
 	        <li><a href="/ScopeProject/admin/logout.action" >Logout</a></li>
 	    </ul> 
 	</div>
-        
+	</td>
+    <td>
     <!-- Main area -->
     <div class="main" id="main_div">
-        Main Window
+        Main Window 
     </div>
+    </td>
+    </tr>   
+    </table>
     
-    <div class="clear"></div>
+    <!-- <div class="clear"></div> -->
+    
+    </div>
 </body>
 </html>

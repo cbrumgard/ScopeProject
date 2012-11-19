@@ -13,6 +13,7 @@ import org.apache.commons.lang3.math.NumberUtils;
 
 import com.opensymphony.xwork2.ActionSupport;
 
+import edu.utk.mabe.scopelab.scope.BaseScopeAction;
 import edu.utk.mabe.scopelab.scope.admin.service.BackendStorageService;
 import edu.utk.mabe.scopelab.scope.admin.service.BackendStorageService.Strategies;
 

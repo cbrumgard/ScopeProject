@@ -38,11 +38,12 @@ public class GraphService
 		public Collection<Node> getNodes();
 		public Collection<Node> getNodesRepeatedByNumConnections();
 		public Collection<Node> getConnectedNodes(Node node);
+		public Collection<Node> getConnectedNodes(int nodeIndex);
 	}
 	
 	protected static class Node implements Comparable<Node>
 	{
-		final int id;
+		protected final int id;
 		
 		Node(int id)
 		{
@@ -53,6 +54,11 @@ public class GraphService
 		public int compareTo(Node o) 
 		{
 			return this.id - o.id;
+		}
+		
+		public int getID()
+		{
+			return this.id;
 		}
 	}
 	
@@ -108,6 +114,13 @@ public class GraphService
 		public Collection<Node> getConnectedNodes(Node fromNode) 
 		{	
 			return links.get(fromNode);
+		}
+		
+
+		@Override
+		public Collection<Node> getConnectedNodes(int nodeIndex) 
+		{
+			return getConnectedNodes(new Node(nodeIndex));
 		}
 
 
@@ -199,6 +212,12 @@ public class GraphService
 		public void removeLink(Node fromNode, Node toNode) 
 		{
 			links.remove(fromNode, toNode);
+		}
+
+		@Override
+		public Collection<Node> getConnectedNodes(int nodeIndex) 
+		{
+			return getConnectedNodes(new Node(nodeIndex));
 		}
 	}
 	

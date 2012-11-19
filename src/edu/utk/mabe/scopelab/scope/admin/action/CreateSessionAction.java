@@ -5,21 +5,31 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileReader;
 import java.io.PrintStream;
+import java.io.StringReader;
+import java.io.UnsupportedEncodingException;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import javax.servlet.ServletContext;
+
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.math.NumberUtils;
+import org.apache.struts2.util.ServletContextAware;
 
+import edu.utk.mabe.scopelab.scope.BaseScopeAction;
+import edu.utk.mabe.scopelab.scope.ScopeError;
+import edu.utk.mabe.scopelab.scope.ScopeServer;
 import edu.utk.mabe.scopelab.scope.admin.service.BackendStorageService;
 import edu.utk.mabe.scopelab.scope.admin.service.GraphService;
 import edu.utk.mabe.scopelab.scope.admin.service.GraphService.Graph;
 import edu.utk.mabe.scopelab.scope.admin.service.GraphService.GraphTypes;
+import edu.utk.mabe.scopelab.scope.admin.service.SessionService.Session;
 
-public class CreateSessionAction extends BaseScopeAction
+public class CreateSessionAction extends BaseScopeAction 
+	implements ServletContextAware
 {
 	/* Pesty serialization crap */
 	private static final long serialVersionUID = -5260524263132289246L;
@@ -28,22 +38,27 @@ public class CreateSessionAction extends BaseScopeAction
 	protected final static String EBA 			 = "EBA";
 	protected final static String USER_SPECIFIED = "USER";
 	
+	/* Variables */
+	protected ServletContext servletContext = null;
+	
 	/* User input variables */
-	protected String sessionName	  	  = null;
+	protected String sessionName	  = null;
 	protected String graphType 		  = null;
 	protected String participantCount = null;
 	protected String initialNumNodes  = null;
 	protected String m				  = null;
 	protected String p				  = null;
 	protected String q				  = null;
-	protected String userFilename     = null;
-	protected File   userFile		  = null;
+	protected String userSpecification = null;
+
+	
 	
 	
 	/**
 	 * Validates the input from the user.
+	 * @throws UnsupportedEncodingException 
 	 */
-	public void validate()
+	public String validateInput() throws UnsupportedEncodingException
 	{
 		System.out.println("Inside of CreateSessionAction validate :-)");
 		System.out.printf("SessionName is %s\n", this.sessionName);
@@ -52,8 +67,14 @@ public class CreateSessionAction extends BaseScopeAction
 		System.out.printf("m %s\n", m);
 		System.out.printf("p %s\n", p);
 		System.out.printf("q %s\n", q);
-		System.out.printf("userFile %s\n", userFile);
+		System.out.printf("userFile %s\n", userSpecification);
 		
+		
+		/* Checks that sessionName is valid */
+		if(StringUtils.isBlank(this.sessionName))
+		{
+			return setErrorMessage("sessionName is invalid");
+		}
 		
 		/* Graph type specified */
 		if(StringUtils.isNotBlank(this.graphType))
@@ -67,8 +88,7 @@ public class CreateSessionAction extends BaseScopeAction
 				
 				if(participantCount < 1)
 				{
-					this.addFieldError("participantCount", "ParticipantCount is invalid");
-					return;
+					return setErrorMessage("ParticipantCount is invalid");
 				}
 				 
 				/* Validates initial number of nodes */
@@ -76,8 +96,7 @@ public class CreateSessionAction extends BaseScopeAction
 				
 				if(initialNumNodes < 1)
 				{
-					this.addFieldError("initialNumNodes", "InitialNumNodes is invalid");
-					return;
+					return setErrorMessage("InitialNumNodes is invalid");
 				}
 				
 				/* Validates m */
@@ -85,8 +104,7 @@ public class CreateSessionAction extends BaseScopeAction
 				
 				if(m <= 0.0d)
 				{
-					this.addFieldError("m", "M is invalid");
-					return;
+					return setErrorMessage("M is invalid");
 				}
 					
 				/* Validates p */
@@ -94,8 +112,7 @@ public class CreateSessionAction extends BaseScopeAction
 				
 				if(p < 0.0d)
 				{
-					this.addFieldError("p", "M is invalid");
-					return;
+					return setErrorMessage("P is invalid");
 				}
 				
 				/* Validates q */
@@ -103,31 +120,31 @@ public class CreateSessionAction extends BaseScopeAction
 				
 				if(q < 0.0d)
 				{
-					this.addFieldError("q", "Q is invalid");
-					return;
+					return setErrorMessage("Q is invalid");
 				}
 				
 			/* User graph */
 			}else if(this.graphType.equals(USER_SPECIFIED))
 			{
-				if(userFile == null)
+				if(userSpecification == null)
 				{
-					this.addFieldError("user", "Must specify a file");
-					return;
+					return setErrorMessage("Must specify a file");
 				}
+				
 			/* Invalid graph type */
 			}else
 			{
-				this.addFieldError("graphType", "GraphType is invalid");
-				return;
+				return setErrorMessage("GraphType is invalid");
 			}
 		
 		/* No graph type selected */ 
 		}else
 		{
-			this.addFieldError("graphType", "GraphType must be specified");
-			return;
+			return setErrorMessage("GraphType must be specified");
 		}
+		
+		/* Input is valid */
+		return null;
 	}
 	
 	/**
@@ -137,98 +154,120 @@ public class CreateSessionAction extends BaseScopeAction
 	{
 		System.out.println("Inside of CreateSessionAction :-)");
 		
-		String nextPage = null;
-		
-
-
+		/* Variables */
 		Graph graph = null;
+		String nextPage = "sessionsPage";
+		
+		
+		/* Validates the input */
+		String result = validateInput();
+		
+		if(result != null)
+		{
+			return result;
+		}
 
 		/* Produces the graph */
 		switch(GraphTypes.valueOf(graphType))
 		{
-		/* Extended BA graph */
-		case EBA:
-			graph = GraphService.createExtendedBA(
-					Integer.parseInt(initialNumNodes), 
-					Integer.parseInt(participantCount), 
-					Integer.parseInt(m), 
-					Float.parseFloat(p), 
-					Float.parseFloat(q));
-			break;
-
+			/* Extended BA graph */
+			case EBA:
+				graph = GraphService.createExtendedBA(
+						Integer.parseInt(initialNumNodes), 
+						Integer.parseInt(participantCount), 
+						Integer.parseInt(m), 
+						Float.parseFloat(p), 
+						Float.parseFloat(q));
+				break;
+	
 			/* User specified graph file */
-		case USER:
-
-			/* Read the graph file */
-			try(BufferedReader input = new BufferedReader(new FileReader(userFile)))
-			{
-				Integer numNodes = null;
-				String row       = null;
-
-				Map<Integer, List<Integer>> connectedNodes 
-				= new HashMap<Integer, List<Integer>>();
-
-				for(int rowID=0; (row = input.readLine()) != null; rowID++)
+			case USER:
+	
+				/* Read the graph file */
+				try(BufferedReader input = new BufferedReader(new StringReader(userSpecification)))
 				{
-					row = row.trim();
-					System.out.printf("row = %s\n", row);
-					String[] cols = row.split("\\s+");
-
-					System.out.printf("numNodes = %d\n", cols.length	);
-
-					for(String col: cols)
+					Integer numNodes = null;
+					String row       = null;
+	
+					Map<Integer, List<Integer>> connectedNodes 
+					= new HashMap<Integer, List<Integer>>();
+	
+					for(int rowID=0; (row = input.readLine()) != null; rowID++)
 					{
-						System.out.printf("'%s'", col);
-					}
-
-
-					/* Gets the number of columns on the first pass */
-					if(numNodes == null)
-					{
-						numNodes = cols.length;
-
-						for(int i=0; i<numNodes; i++)
+						row = row.trim();
+						System.out.printf("row = %s\n", row);
+						String[] cols = row.split("\\s+");
+	
+						System.out.printf("numNodes = %d\n", cols.length	);
+	
+						for(String col: cols)
 						{
-							connectedNodes.put(i, new LinkedList<Integer>());
+							System.out.printf("'%s'", col);
 						}
-					}
-
-					/* Checks the number of nodes is the same for each
-					 * row */
-					if(cols.length != numNodes)
-					{
-						this.addFieldError("user", "Invalid file");
-
-						/* Error page */
-						return "input";
-					}
-
-					/* Builds the connected node map */
-					for(int colID=0; colID<numNodes; colID++)
-					{
-						System.out.printf("ColumnID = %s\n", cols[colID]); 
-						if(Double.parseDouble(cols[colID]) != 0f)
+	
+	
+						/* Gets the number of columns on the first pass */
+						if(numNodes == null)
 						{
-							connectedNodes.get(rowID).add(colID);
+							numNodes = cols.length;
+	
+							for(int i=0; i<numNodes; i++)
+							{
+								connectedNodes.put(i, new LinkedList<Integer>());
+							}
 						}
+	
+						/* Checks the number of nodes is the same for each
+						 * row */
+						if(cols.length != numNodes)
+						{
+							this.addFieldError("user", "Invalid file");
+	
+							/* Error page */
+							return "input";
+						}
+	
+						/* Builds the connected node map */
+						for(int colID=0; colID<numNodes; colID++)
+						{
+							System.out.printf("ColumnID = %s\n", cols[colID]); 
+							if(Double.parseDouble(cols[colID]) != 0f)
+							{
+								connectedNodes.get(rowID).add(colID);
+							}
+						}
+	
 					}
-
-				}
-
-				/* Creates the graph */
-				graph = GraphService.createFromUserSpecification(connectedNodes);
+	
+					/* Creates the graph */
+					graph = GraphService.createFromUserSpecification(connectedNodes);
 			}
 
 			break;
 		}
 
+		/* Gets the scope server */
+		ScopeServer scopeServer = (ScopeServer)servletContext.getAttribute(
+				"edu.utk.mabe.scopelab.scope.ScopeServer");
 
-		System.out.println("Creating storage service");
-		BackendStorageService storageService = new BackendStorageService();
-
-
-		storageService.storeGraph(UUID.randomUUID(), graph);
-
+		/* Error since there is already a server running */
+		if(scopeServer == null)
+		{
+			return setErrorMessage("Server not running");
+		}
+	
+		/* Create a session */
+		try
+		{
+			Session session = scopeServer.createSession(sessionName, graph);
+			
+		}catch(ScopeError e)
+		{
+			return setErrorMessage(e.getMessage());
+		}
+		
+		/* Success */
+		System.out.println("Next page is "+nextPage);
 		return nextPage;
 	}
 
@@ -302,20 +341,15 @@ public class CreateSessionAction extends BaseScopeAction
 		this.q = q.trim();
 	}
 	
-	public void setUser(File file) 
+	public void setUserSpecification(String file) 
 	{
-        this.userFile = file;
+        this.userSpecification = file;
     }
 	
-	public void setUserContentType(String contentType)
+	@Override
+	public void setServletContext(ServletContext servletContext) 
 	{
-		System.out.printf("content type = %s\n", contentType);
-		// Do nothing
+		this.servletContext = servletContext;
 	}
-	
-	public void setUserFileName(String filename)
-	{
-		System.out.printf("filename = %s\n", filename);
-		// Do nothing 
-	}
+
 }

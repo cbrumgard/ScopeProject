@@ -7,6 +7,8 @@ import org.apache.struts2.interceptor.SessionAware;
 
 import com.opensymphony.xwork2.ActionSupport;
 
+import edu.utk.mabe.scopelab.scope.BaseScopeAction;
+
 public class LogoutAction extends BaseScopeAction implements SessionAware
 {
 	private static final long serialVersionUID = 9033445536465550406L;

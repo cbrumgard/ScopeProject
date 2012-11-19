@@ -6,6 +6,8 @@ import java.util.Enumeration;
 import java.util.LinkedList;
 import java.util.List;
 
+import edu.utk.mabe.scopelab.scope.BaseScopeAction;
+
 import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 

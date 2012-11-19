@@ -7,73 +7,194 @@
     <meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
     <title>Session creation</title>
 
-    <script src="http://code.jquery.com/jquery-latest.min.js"></script> 
-
- <div id="fillin" 
-    EBA='<s:textfield label="Participant Count" key="participantCount" /><br/>
-         <s:textfield label="initialNumNodes" key="initialNumNodes"/><br/>
-         <s:textfield label="M variable" key="m" /><br/>
-         <s:textfield label="P probability" key="p"/><br/>
-         <s:textfield label="Q probability" key="q"/><br/>
-         <s:submit />'
-          
-     USER='<s:file name="user" key="user" label="file" /><br /> 
-           <s:submit />'
- />
-         
-
-
-</head>
-<body>
-
- 
+    
     <script type="text/javascript">
+    
+    // Globals
+    var graphType = undefined;
+    var file      = undefined;
     
     function validateEBA()
     {
-    	
+        
+    }
+    
+    function testFiles(files)
+    {
+    	file = files[0];
     }
     
     
-    function test()
+    function switchGraphParameters()
     {
         var graphSelect = document.getElementById("graphSelect");
-        var graphType   = graphSelect.options[graphSelect.selectedIndex].value;
+        graphType   = graphSelect.options[graphSelect.selectedIndex].value;
      
         var form = document.getElementById("extraFormData");
         
         /* Extended BA */
         if(graphType == "EBA")
         {
-        	form.innerHTML = document.getElementById("fillin").attributes["EBA"].value;
-        	
+            form.innerHTML = document.getElementById("fillin").attributes["EBA"].value;
+            
         /* User input graph */
         }else if(graphType == "USER") 
         {
-        	form.innerHTML = document.getElementById("fillin").attributes["USER"].value;
-		}  
+            form.innerHTML = document.getElementById("fillin").attributes["USER"].value;
+        }  
     }
-    </script>
+    
+    function submitSessionParameters(params)
+    {
+    	console.log(params);
+    	
+    	// Ajax query
+        jQuery.ajax(
+        	{
+        		url: "/ScopeProject/admin/createSession",
+        		type: "POST",
+        		async: true,
+        		data: params,
+        		error: function(jqXHR, textStatus, errorThrown) 
+        		  {
+        			 // TODO handle error 
+        			 console.log(textStatus);
+        		  },
+        		  
+        		success: function(dataObject, textStatus, jqXHR) 
+        		  {
+        			 // TODO handle success 
+        			 console.log(dataObject);
+        			 
+        			
+        			 // Normal page return
+       	             if(typeof(dataObject) == "string")
+       	             {
+       	            	//params["sessionName"]
+       	            	adminSessionsToWatch[params["sessionName"]] = true;
+       	            	 
+       	                console.log(dataObject);
+       	                jQuery("#main_div").html(dataObject);
 
-   
+       	                // Json response object
+       	             }else
+       	             {
+       	                processJSONResult(dataObject);
+
+       	             }
+        			 
+        			 jQuery("#main_div").html(dataObject);		 
+        		  }
+        		  
+        	}).fail(function(jqXHR, textStatus) { raiseErrorDialog("Request failed: " + textStatus); });
+    }
+    
+    function sendEBAParameters()
+    {
+        // TODO Implement EBA parameters	
+    }
+    
+    
+    function sendUserParameters()
+    {
+    	// File reader for user file
+    	var fileReader = new FileReader();
+    	
+    	// Error handler for user file 
+    	fileReader.onerror = function(event)
+    	{
+    	    console.log("file reader error"+event);	
+    	};
+    	
+    	// Handles read complete event for the file reader
+    	fileReader.onload = function(event) 
+   	    {
+    		// Gets the session name
+    	    var sessionName = jQuery("#sessionName").val();
+    	    
+    	    params =   
+    	    	{ 
+    	    		sessionName : sessionName,
+                    graphType : "USER",
+                    userSpecification : event.target.result 
+                 };
+    	    
+    	    // Submit the session 
+    	    submitSessionParameters(params);
+   	    };
+    	   
+    	fileReader.onloadend = function(event)
+    	{
+    	    console.log("file reader onloadend" + event);
+    	};
+    	
+    	fileReader.onabort = function(event)
+    	{
+    		console.log("file reader abort" + event);
+    	};
+    	
+    	// Read the file asynchronously
+    	fileReader.readAsText(file);
+    }
+    
+    function onSubmit()
+    {
+    	console.log("Submitting...");
+    	
+    	
+    	
+    	
+    	switch(graphType)
+    	{
+    	    case "EBA":  sendEBAParameters();  break;
+    	    case "USER": sendUserParameters(); break;
+    	}
+    }
+    
+    </script>
+</head>
+<body>
+
+
+ <div id="fillin" 
+    EBA='<label for="participantCount">Participant Count</label>
+         <input type="text" id="participantCount" name="participantCount" /><br/>
+         <label for="initialNumNodes">initialNumNodes</label>
+         <input type="text" id="initialNumNodes" name="initialNumNodes"/><br/>
+         <label for="m">M variable</label>
+         <input type="text" id="m" name="m" /><br/>
+         <label for="p">P probability</label>
+         <s:textfield id="p" name="p"/><br/>
+         <label for="q">Q probability</label>
+         <input type="text" id="q" name="q"/><br/>
+         <input type="submit" />'
+          
+     USER='<label for="user">file</label>
+           <input type="file" name="user" id="user" onchange="testFiles(this.files)" /><br /> 
+           <input type="button" value="submit" onclick="onSubmit()" />'
+ ></div>
+         
     
     <!-- Form for graph entry parameters -->
-    <s:form id="createSessionForm" method="post" enctype="multipart/form-data" 
-        action="admin/createSession">
+    <form id="createSessionForm" method="POST" 
+          action="javascript:onSubmit()">
         <table>
         <tr>
         <td>
-        <s:textfield label="Session Name" key="sessionName" /><br />
-        <s:select id="graphSelect" label="Select Graph Type" key="graphType" 
-                  onchange="test()" 
-                  list='#{"":"", "EBA":"EBA", "USER":"User"}' />
+        <label for="sessionName">Session Name</label> 
+        <input type="text" id="sessionName" name="sessionName"/><br/>
+        <label for="graphSelect">Select Graph Type</label>
+        <select id="graphSelect" name="graphType"  onchange="switchGraphParameters()" >
+            <option value=""></option>
+            <option value="EBA">EBA</option>
+            <option value="USER">User</option>
+        </select>         
         </td>
         </tr>
-        
         <tr><td id="extraFormData" />
         </tr>
         </table>
-    </s:form>
+    </form>
    
 </body>
 </html>
