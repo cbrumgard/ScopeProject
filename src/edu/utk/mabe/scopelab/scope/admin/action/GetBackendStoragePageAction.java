@@ -4,7 +4,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 
 import edu.utk.mabe.scopelab.scope.BaseScopeAction;
-import edu.utk.mabe.scopelab.scope.admin.service.BackendStorageService;
+import edu.utk.mabe.scopelab.scope.admin.service.StorageService;
 
 public class GetBackendStoragePageAction extends BaseScopeAction
 {
@@ -20,8 +20,8 @@ public class GetBackendStoragePageAction extends BaseScopeAction
 
 
 		/* New BackendStorage service */
-		BackendStorageService backendStorageService = 
-				new BackendStorageService();
+		StorageService backendStorageService = 
+				new StorageService();
 
 		isInitialized = backendStorageService.isInitialized();
 

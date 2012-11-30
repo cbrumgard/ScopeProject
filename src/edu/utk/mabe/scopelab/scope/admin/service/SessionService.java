@@ -4,6 +4,7 @@ import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 import javax.jms.JMSException;
 import javax.jms.Message;
@@ -17,6 +18,7 @@ import edu.utk.mabe.scopelab.scope.ScopeError;
 import edu.utk.mabe.scopelab.scope.admin.service.GraphService.Graph;
 import edu.utk.mabe.scopelab.scope.admin.service.GraphService.Node;
 import edu.utk.mabe.scopelab.scope.admin.service.MessengingService.VirtualTopic;
+import edu.utk.mabe.scopelab.scope.admin.service.ScriptService.Script;
 
 public class SessionService 
 {
@@ -28,17 +30,36 @@ public class SessionService
 			protected final int requiredNumberOfParticipants;
 			protected int numParticipants = 0;
 			
+			protected MessageProducer joinProducer = null;
 			protected VirtualTopic[] virtualTopics;
+			protected VirtualTopic   newsfeed;
+			protected boolean        started;
 			
 			
-			
-			protected JoinHandler(int requiredNumberOfParticipants) 
-					throws JMSException
+			protected JoinHandler(int requiredNumberOfParticipants)
 			{
 				this.requiredNumberOfParticipants = requiredNumberOfParticipants;
 				
-				this.virtualTopics = new VirtualTopic[requiredNumberOfParticipants];
+				/* News feed topic */
+				//this.newsfeed = messengingService.createVirtualTopic(
+				//		String.format("%s.%s", sessionID, newsfeed));
 				
+				
+				this.virtualTopics = new VirtualTopic[requiredNumberOfParticipants];				
+			}
+				
+			protected String getJoinQueueName() throws JMSException
+			{
+				return this.joinProducer.getDestination().toString();
+			}
+			
+			protected boolean hasStarted()
+			{
+				return this.started;
+			}
+			
+			void start() throws JMSException
+			{
 				for(int i=0; i<requiredNumberOfParticipants; i++)
 				{
 					/* Creates a virtual topic for the broadcast 
@@ -48,6 +69,16 @@ public class SessionService
 									String.format("%s.%s", sessionID, Integer.toString(i)));
 				}
 				
+				/* Gets a name for the join destination queue */
+				String joinDestination = messengingService.getSessionJoinDestination(sessionID);
+				
+				/* Creates a queue for listening to joins */
+				joinProducer = messengingService.createQueue(joinDestination, joinHandler);
+			
+				/* Sends the announcement message */
+				messengingService.sendNewSessionMessage(sessionID, joinDestination);
+				
+				this.started = true;
 			}
 			
 			@Override
@@ -116,9 +147,10 @@ public class SessionService
 					/* Builds the response object with the publish topic and
 					 * the queues to subscribe to */
 					JSONObject dataObject = new JSONObject();
-					
+				
+					dataObject.element("NewsFeedTopic", newsfeed.getTopicURL());
 					dataObject.element("PublishTopic", virtualTopics[participantIndex].getTopicURL());
-					
+				
 					for(Node node: graph.getConnectedNodes(participantIndex))
 					{			
 						dataObject.accumulate("ListenQueues", 
@@ -187,42 +219,51 @@ public class SessionService
 		
 		
 		/* Instance variables */
-		final String sessionID;
-		final Graph  graph;
+		final protected String sessionID;
+		final protected Graph  graph;
+		final protected Script script;
+		final protected int    requiredNumOfParticpants;
 		
 		protected MessengingService messengingService = null;
 		protected JoinHandler joinHandler = null;
-		protected MessageProducer joinProducer = null;
-		protected BackendStorageService storageService = null;
-		protected boolean started = false;
+		
+		protected StorageService storageService = null;
+		
 		
 		protected final ParticipantEntry[] participants;
 		protected final Map<String, Integer> participantIDToIndexMap;
 		
+		/* Status info */
+		protected boolean started = false;
+	
+		
 		Session(String sessionID, Graph graph, 
-				MessengingService messengingService, 
-				BackendStorageService storageService) throws JMSException
+				Script script, MessengingService messengingService, 
+				StorageService storageService) throws JMSException
 		{
 			this.sessionID = sessionID;
 			this.graph = graph;
+			this.script = script;
 			
 			this.messengingService = messengingService;
 			this.storageService    = storageService;
 			
-			joinHandler = new JoinHandler(graph.getNumNodes());
+			this.requiredNumOfParticpants = graph.getNumNodes();
+			
+			joinHandler = new JoinHandler(this.requiredNumOfParticpants);
 			
 			this.participants = new ParticipantEntry[graph.getNumNodes()];
-			this.participantIDToIndexMap = new HashMap<>(graph.getNumNodes());
+			this.participantIDToIndexMap = new ConcurrentHashMap<>(graph.getNumNodes());
 		}
 		
-		Session(Graph graph, MessengingService messengingService, 
-				BackendStorageService storageService) throws JMSException
+		Session(Graph graph, Script script, MessengingService messengingService, 
+				StorageService storageService) throws JMSException
 		{
-			this(UUID.randomUUID().toString(), graph, messengingService, 
+			this(UUID.randomUUID().toString(), graph, script, messengingService, 
 					storageService);
 		}
 		
-		public void start() throws JMSException, SQLException, ScopeError 
+		public void activate() throws JMSException, SQLException, ScopeError 
 		{
 			/* Checks the session hasn't already been started */
 			if(this.started == true)
@@ -232,42 +273,60 @@ public class SessionService
 			
 			this.started = true;
 			
-			/* Gets a name for the join destination queue */
-			String joinDestination = messengingService.getSessionJoinDestination(sessionID);
-			
-			/* Creates a queue for listening to joins */
-			joinProducer = messengingService.createQueue(joinDestination, joinHandler);
-			
+			/* Starts the join handler */
+			this.joinHandler.start();
+		
 			/* Adds the session to the list of active sessions in the backend
 			 * storage */
 			storageService.storeActiveSession(this);
-			
-			/* Sends the announcement message */
-			messengingService.sendNewSessionMessage(sessionID, joinDestination);
 		}
 		
+		public void start()
+		{
+			/* Send out the news feed */
+		}
 		
 		public String getJoinQueueName() throws JMSException
 		{
-			return this.joinProducer.getDestination().toString();
+			return this.joinHandler.getJoinQueueName();
+		}
+		
+		public boolean hasStarted()
+		{
+			return this.started;
+		}
+		
+		public boolean isCollectingParticipants()
+		{
+			return this.joinHandler.hasStarted();
+		}
+		
+		public int getNumberofParticipants()
+		{
+			return this.participantIDToIndexMap.size();
+		}
+		
+		public int getCurrentNumberOfParticipants()
+		{
+			return this.requiredNumOfParticpants;
 		}
 	}
 	
 	/* Instance variables */
-	final protected BackendStorageService storageService;
+	final protected StorageService storageService;
 	
 	
-	public SessionService(BackendStorageService storageService)
+	public SessionService(StorageService storageService)
 	{
 		this.storageService = storageService;
 	}
 	
 	public Session createSession(String sessionID, Graph graph, 
-				MessengingService messengingService, 
-				BackendStorageService storageService) throws JMSException
+				Script script, MessengingService messengingService, 
+				StorageService storageService) throws JMSException
 	{
 		/* Creates the session */
-		Session session = new Session(sessionID, graph, messengingService, 
+		Session session = new Session(sessionID, graph, script, messengingService, 
 				storageService);
 		
 		return session;

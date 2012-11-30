@@ -134,13 +134,12 @@ function showSessionPanel()
 	jQuery("#session_tabs").tabs("show");
 }
 
-function startSession(sessionID)
+function activateSession(sessionID)
 {
-	alert("Start session "+sessionID);
 	
 	jQuery.ajax(
 			{
-				url: "/ScopeProject/admin/startSession",
+				url: "/ScopeProject/admin/activateSession",
 				async: true,
 				data: { "sessionID" : sessionID },
 		
@@ -159,11 +158,17 @@ function startSession(sessionID)
 			  .always(function() { });
 }
 
+function runSession(sessionID)
+{
+	alert("Run session "+sessionID);
+}
+
 function addSessionTab(sessionName)
 {
 	tabTemplate = "<li><a href='#{href}'>#{label}</a> <span class='ui-icon ui-icon-close'>Remove Tab</span></li>";
 	
-	content = "<button type='button' onclick='startSession("+'"'+sessionName+'"'+")'>Start</button>";
+	content = "<div id='"+sessionName+"_tab'></div>";
+		
 	
 	var label = sessionName; //tabTitle.val() || "Tab " + tabCounter;
     var id = "tabs_session_" + sessionName;
@@ -172,15 +177,11 @@ function addSessionTab(sessionName)
     //var tabContentHtml = tabContent.val() || "Tab " + tabCounter + " content.";
 
     var sessionTabs = jQuery("#session_tabs");
-    	
-    console.log(sessionTabs);
-    
+    	    
     // Create the tab
     sessionTabs.find(".ui-tabs-nav").append(li);
     sessionTabs.append( "<div id='" + id + "'><p>" + content + "</p></div>" );
-    
-    
-    
+   
     
     console.log(sessionTabs);
     

@@ -69,7 +69,11 @@
             <result name="createSessionPage">/WEB-INF/pages/admin/createSessionPage.jsp</result>
         </action>
         
-        <action name="startSession" class="edu.utk.mabe.scopelab.scope.admin.action.StartSessionAction">
+        <action name="activateSession" class="edu.utk.mabe.scopelab.scope.admin.action.ActivateSessionAction">
+            <interceptor-ref name="adminStack" />
+        </action>
+        
+        <action name="getSessionStatus" class="edu.utk.mabe.scopelab.scope.admin.action.GetSessionStatus">
             <interceptor-ref name="adminStack" />
         </action>
         

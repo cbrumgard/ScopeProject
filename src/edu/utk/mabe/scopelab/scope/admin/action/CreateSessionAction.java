@@ -4,6 +4,8 @@ import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileReader;
+import java.io.IOException;
+import java.io.LineNumberReader;
 import java.io.PrintStream;
 import java.io.StringReader;
 import java.io.UnsupportedEncodingException;
@@ -22,10 +24,12 @@ import org.apache.struts2.util.ServletContextAware;
 import edu.utk.mabe.scopelab.scope.BaseScopeAction;
 import edu.utk.mabe.scopelab.scope.ScopeError;
 import edu.utk.mabe.scopelab.scope.ScopeServer;
-import edu.utk.mabe.scopelab.scope.admin.service.BackendStorageService;
+import edu.utk.mabe.scopelab.scope.admin.service.StorageService;
 import edu.utk.mabe.scopelab.scope.admin.service.GraphService;
 import edu.utk.mabe.scopelab.scope.admin.service.GraphService.Graph;
 import edu.utk.mabe.scopelab.scope.admin.service.GraphService.GraphTypes;
+import edu.utk.mabe.scopelab.scope.admin.service.ScriptService;
+import edu.utk.mabe.scopelab.scope.admin.service.ScriptService.Script;
 import edu.utk.mabe.scopelab.scope.admin.service.SessionService.Session;
 
 public class CreateSessionAction extends BaseScopeAction 
@@ -49,8 +53,8 @@ public class CreateSessionAction extends BaseScopeAction
 	protected String m				  = null;
 	protected String p				  = null;
 	protected String q				  = null;
-	protected String userSpecification = null;
-
+	protected String graphfile 		  = null;
+	protected String scriptfile		  = null;
 	
 	
 	
@@ -62,18 +66,24 @@ public class CreateSessionAction extends BaseScopeAction
 	{
 		System.out.println("Inside of CreateSessionAction validate :-)");
 		System.out.printf("SessionName is %s\n", this.sessionName);
+		System.out.printf("Scriptfile is %s\n", this.scriptfile);
 		System.out.printf("GraphType is %s\n", this.graphType);
 		System.out.printf("initialNumNodes %s\n", initialNumNodes);
 		System.out.printf("m %s\n", m);
 		System.out.printf("p %s\n", p);
 		System.out.printf("q %s\n", q);
-		System.out.printf("userFile %s\n", userSpecification);
-		
+		System.out.printf("graphfile %s\n", this.graphfile);
+	
 		
 		/* Checks that sessionName is valid */
 		if(StringUtils.isBlank(this.sessionName))
 		{
 			return setErrorMessage("sessionName is invalid");
+		}
+		
+		if(StringUtils.isBlank(this.scriptfile))
+		{
+			return setErrorMessage("scriptfile is invalid");
 		}
 		
 		/* Graph type specified */
@@ -126,7 +136,7 @@ public class CreateSessionAction extends BaseScopeAction
 			/* User graph */
 			}else if(this.graphType.equals(USER_SPECIFIED))
 			{
-				if(userSpecification == null)
+				if(graphfile == null)
 				{
 					return setErrorMessage("Must specify a file");
 				}
@@ -167,6 +177,9 @@ public class CreateSessionAction extends BaseScopeAction
 			return result;
 		}
 
+		/* Produces the script from the script description */
+		Script script = ScriptService.parseScript(this.scriptfile);
+		
 		/* Produces the graph */
 		switch(GraphTypes.valueOf(graphType))
 		{
@@ -183,14 +196,14 @@ public class CreateSessionAction extends BaseScopeAction
 			/* User specified graph file */
 			case USER:
 	
+				
 				/* Read the graph file */
-				try(BufferedReader input = new BufferedReader(new StringReader(userSpecification)))
+				try(BufferedReader input = new BufferedReader(new StringReader(graphfile)))
 				{
 					Integer numNodes = null;
 					String row       = null;
 	
-					Map<Integer, List<Integer>> connectedNodes 
-					= new HashMap<Integer, List<Integer>>();
+					Map<Integer, List<Integer>> connectedNodes = new HashMap<>();
 	
 					for(int rowID=0; (row = input.readLine()) != null; rowID++)
 					{
@@ -259,7 +272,7 @@ public class CreateSessionAction extends BaseScopeAction
 		/* Create a session */
 		try
 		{
-			Session session = scopeServer.createSession(sessionName, graph);
+			Session session = scopeServer.createSession(sessionName, graph, script);
 			
 		}catch(ScopeError e)
 		{
@@ -270,8 +283,8 @@ public class CreateSessionAction extends BaseScopeAction
 		System.out.println("Next page is "+nextPage);
 		return nextPage;
 	}
-
-	public String getNameSession() 
+	
+	public String getSessionName() 
 	{
 		return sessionName;
 	}
@@ -341,15 +354,28 @@ public class CreateSessionAction extends BaseScopeAction
 		this.q = q.trim();
 	}
 	
-	public void setUserSpecification(String file) 
-	{
-        this.userSpecification = file;
-    }
-	
 	@Override
 	public void setServletContext(ServletContext servletContext) 
 	{
 		this.servletContext = servletContext;
 	}
 
+	public String getGraphfile() 
+	{
+		return graphfile;
+	}
+
+	public void setGraphfile(String graphfile) 
+	{
+		this.graphfile = graphfile;
+	}
+
+	public String getScriptfile() {
+		return scriptfile;
+	}
+
+	public void setScriptfile(String scriptfile) 
+	{
+		this.scriptfile = scriptfile;
+	}
 }

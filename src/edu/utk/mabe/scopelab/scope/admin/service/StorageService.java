@@ -21,9 +21,11 @@ import javax.naming.NamingException;
 import edu.utk.mabe.scopelab.scope.SessionDescription;
 import edu.utk.mabe.scopelab.scope.admin.service.GraphService.Graph;
 import edu.utk.mabe.scopelab.scope.admin.service.GraphService.Node;
+import edu.utk.mabe.scopelab.scope.admin.service.ScriptService.Event;
+import edu.utk.mabe.scopelab.scope.admin.service.ScriptService.Script;
 import edu.utk.mabe.scopelab.scope.admin.service.SessionService.Session;
 
-public class BackendStorageService 
+public class StorageService 
 {
 	/* Valid strategies Enum */
 	public enum Strategies
@@ -43,7 +45,7 @@ public class BackendStorageService
 	protected boolean 	 isInitialized = false;
 	
 
-	public BackendStorageService() 
+	public StorageService() 
 			throws NamingException, ClassNotFoundException, SQLException 
 	{
 		Context env =  (Context)new InitialContext().lookup("java:comp/env");
@@ -52,7 +54,7 @@ public class BackendStorageService
 			 (String)env.lookup("scope.admin.backend.port"));
 	}
 	
-	public BackendStorageService(String hostname, String port) 
+	public StorageService(String hostname, String port) 
 			throws ClassNotFoundException, SQLException
 	{
 		init(hostname, port);
@@ -187,6 +189,15 @@ public class BackendStorageService
 		
 		/* Creates the graph column family */
 		conn.createStatement().execute(
+				"CREATE COLUMNFAMILY scripts " +
+				"(" +
+				"	scriptID  uuid PRIMARY KEY " +
+				")" +
+				
+				"WITH comparator=text AND default_validation=text");
+		
+		/* Creates the graph column family */
+		conn.createStatement().execute(
 				"CREATE COLUMNFAMILY graphs " +
 				"(" +
 				"	graphID  uuid PRIMARY KEY," +
@@ -255,6 +266,30 @@ public class BackendStorageService
 				"USING CONSISTENCY QUORUM");		
 		
 		System.out.println("Done storing graph\n");
+	}
+	
+	public void storeScript(UUID uuid, Script script) throws SQLException
+	{
+		StringBuilder columns = new StringBuilder("scriptID");
+		StringBuilder values  = new StringBuilder("'"+uuid.toString()+"'");
+				
+		for(Event event : script.getAllEvents())
+		{
+			columns.append(','); columns.append(event.getIteration());
+			values.append(",'"); 
+			values.append(event.toString()); 
+			values.append("'");
+			
+		}
+		
+		/* Change to the Scope keyspace */
+		conn.createStatement().execute("USE Scope");
+
+		conn.createStatement().execute(
+				"INSERT INTO scripts("+columns+") VALUES("+values+") " +
+				"USING CONSISTENCY QUORUM");
+		
+		System.out.println("Done storing script\n");
 	}
 	
 	public boolean doesSessionExist(String sessionID) throws SQLException

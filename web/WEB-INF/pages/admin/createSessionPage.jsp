@@ -9,21 +9,20 @@
 
     
     <script type="text/javascript">
+ 
+    // Constants
+    GRAPHFILE  = 'graphfile';
+    SCRIPTFILE = 'scriptfile';
+    
     
     // Globals
     var graphType = undefined;
-    var file      = undefined;
+ 
     
     function validateEBA()
     {
         
     }
-    
-    function testFiles(files)
-    {
-    	file = files[0];
-    }
-    
     
     function switchGraphParameters()
     {
@@ -87,63 +86,69 @@
         		  }
         		  
         	}).fail(function(jqXHR, textStatus) { raiseErrorDialog("Request failed: " + textStatus); });
+    } 
+    
+    
+    function readFile(filename, variableName)
+    {
+    	console.log("reading "+filename);
+    	
+    	// Reset the window variable that holds the content
+    	window[variableName] = null;
+    	
+        // File reader for user file
+        var fileReader = new FileReader();
+ 
+  
+        // Error handler for user file 
+        fileReader.onerror = function(event)
+        {
+            console.log("file reader error"+event); 
+        };
+        
+        // Handles read complete event for the file reader
+        fileReader.onload = function(event) 
+        {
+            window[variableName] = event.target.result;
+        };
+           
+        fileReader.onloadend = function(event)
+        {
+            console.log("file reader onloadend" + event);
+        };
+        
+        fileReader.onabort = function(event)
+        {
+            console.log("file reader abort" + event);
+        };
+        
+        // Read the file asynchronously
+        fileReader.readAsText(filename);
     }
     
     function sendEBAParameters()
     {
-        // TODO Implement EBA parameters	
+        // TODO Implement EBA parameters    
     }
-    
     
     function sendUserParameters()
     {
-    	// File reader for user file
-    	var fileReader = new FileReader();
-    	
-    	// Error handler for user file 
-    	fileReader.onerror = function(event)
-    	{
-    	    console.log("file reader error"+event);	
-    	};
-    	
-    	// Handles read complete event for the file reader
-    	fileReader.onload = function(event) 
-   	    {
-    		// Gets the session name
-    	    var sessionName = jQuery("#sessionName").val();
-    	    
-    	    params =   
-    	    	{ 
-    	    		sessionName : sessionName,
-                    graphType : "USER",
-                    userSpecification : event.target.result 
-                 };
-    	    
-    	    // Submit the session 
-    	    submitSessionParameters(params);
-   	    };
-    	   
-    	fileReader.onloadend = function(event)
-    	{
-    	    console.log("file reader onloadend" + event);
-    	};
-    	
-    	fileReader.onabort = function(event)
-    	{
-    		console.log("file reader abort" + event);
-    	};
-    	
-    	// Read the file asynchronously
-    	fileReader.readAsText(file);
+   	    params =   
+   	    	{ 
+   	    		sessionName : jQuery('#sessionName').val(),
+   	    		scriptfile : window[SCRIPTFILE],
+                graphType : 'USER',
+                graphfile : window[GRAPHFILE], 
+            };
+   	    
+   	    // Submit the session 
+   	    submitSessionParameters(params);  
     }
     
     function onSubmit()
     {
     	console.log("Submitting...");
-    	
-    	
-    	
-    	
+    
     	switch(graphType)
     	{
     	    case "EBA":  sendEBAParameters();  break;
@@ -154,6 +159,7 @@
     </script>
 </head>
 <body>
+
 
 
  <div id="fillin" 
@@ -169,11 +175,11 @@
          <input type="text" id="q" name="q"/><br/>
          <input type="submit" />'
           
-     USER='<label for="user">file</label>
-           <input type="file" name="user" id="user" onchange="testFiles(this.files)" /><br /> 
-           <input type="button" value="submit" onclick="onSubmit()" />'
+    USER="<label for='user'>file</label>
+           <input type='file' name='graph' id='graph' onchange='readFile(this.files[0], GRAPHFILE);' /><br /> 
+           <input type='button' value='submit' onclick='onSubmit()' />"
+  
  ></div>
-         
     
     <!-- Form for graph entry parameters -->
     <form id="createSessionForm" method="POST" 
@@ -183,8 +189,10 @@
         <td>
         <label for="sessionName">Session Name</label> 
         <input type="text" id="sessionName" name="sessionName"/><br/>
+        <label for='script'>Script File</label>
+        <input type='file' name='script' id='script' onchange='readFile(this.files[0], SCRIPTFILE);'/><br/>
         <label for="graphSelect">Select Graph Type</label>
-        <select id="graphSelect" name="graphType"  onchange="switchGraphParameters()" >
+        <select id="graphSelect" name="graphType"  onchange="switchGraphParameters();" >
             <option value=""></option>
             <option value="EBA">EBA</option>
             <option value="USER">User</option>

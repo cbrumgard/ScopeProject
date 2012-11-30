@@ -14,8 +14,8 @@ import org.apache.commons.lang3.math.NumberUtils;
 import com.opensymphony.xwork2.ActionSupport;
 
 import edu.utk.mabe.scopelab.scope.BaseScopeAction;
-import edu.utk.mabe.scopelab.scope.admin.service.BackendStorageService;
-import edu.utk.mabe.scopelab.scope.admin.service.BackendStorageService.Strategies;
+import edu.utk.mabe.scopelab.scope.admin.service.StorageService;
+import edu.utk.mabe.scopelab.scope.admin.service.StorageService.Strategies;
 
 public class InitializeBackendStorageAction extends BaseScopeAction
 {
@@ -48,8 +48,8 @@ public class InitializeBackendStorageAction extends BaseScopeAction
 
 
 		/* Initialize the backend service */
-		BackendStorageService backendStorageService = 
-				new BackendStorageService();
+		StorageService backendStorageService = 
+				new StorageService();
 
 		Strategies[] validStrategies = backendStorageService.getStrategies();
 

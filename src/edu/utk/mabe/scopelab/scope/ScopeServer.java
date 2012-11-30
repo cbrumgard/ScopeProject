@@ -19,9 +19,10 @@ import javax.naming.NamingException;
 
 import org.apache.commons.collections.map.HashedMap;
 
-import edu.utk.mabe.scopelab.scope.admin.service.BackendStorageService;
+import edu.utk.mabe.scopelab.scope.admin.service.StorageService;
 import edu.utk.mabe.scopelab.scope.admin.service.GraphService.Graph;
 import edu.utk.mabe.scopelab.scope.admin.service.MessengingService;
+import edu.utk.mabe.scopelab.scope.admin.service.ScriptService.Script;
 import edu.utk.mabe.scopelab.scope.admin.service.SessionService;
 import edu.utk.mabe.scopelab.scope.admin.service.SessionService.Session;
 
@@ -32,7 +33,7 @@ public class ScopeServer
 
 	/* Instance variables */
 	final protected MessengingService messagingService;
-	final protected BackendStorageService storageService;
+	final protected StorageService storageService;
 	final protected SessionService sessionService;
 	final Map<String, Session> sessionMap = new HashMap<>();
 	
@@ -45,7 +46,7 @@ public class ScopeServer
 									webSocketHostname, webSocketPort);
 		
 		/* Create the backend storage service */
-		storageService = new BackendStorageService();
+		storageService = new StorageService();
 		
 		/* Session service */
 		sessionService = new SessionService(storageService);
@@ -53,7 +54,7 @@ public class ScopeServer
 		System.out.println("Message broker setup");
 	}
 	
-	public Session createSession(String sessionID, Graph graph) 
+	public Session createSession(String sessionID, Graph graph, Script script) 
 			throws SQLException, JMSException, ScopeError 
 	{		
 		/* Session already exists */
@@ -65,13 +66,16 @@ public class ScopeServer
 		
 		/* Create the session */
 		Session session = sessionService.createSession(
-				sessionID, graph, messagingService, storageService);
+				sessionID, graph, script, messagingService, storageService);
 		
 		/* Store the session */
 		storageService.storeSession(session);
 		
 		/* Store the graph */
 		storageService.storeGraph(UUID.randomUUID(), graph);
+		
+		/* Store the script */
+		storageService.storeScript(UUID.randomUUID(), script);
 		
 		/* Puts the session into the session map */
 		this.sessionMap.put(sessionID, session);
@@ -107,7 +111,7 @@ public class ScopeServer
 			throw new ScopeError("No such session");
 		}
 		
-		session.start();
+		session.activate();
 	}
 	
 	public Iterable<SessionDescription> getActiveSessions() throws SQLException
