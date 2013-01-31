@@ -49,15 +49,15 @@ public class ActivateSessionAction extends BaseScopeAction
 		try
 		{
 			/* Starts the session */
-			scopeServer.startSession(sessionID);
+			scopeServer.activateSession(sessionID);
 		
 		}catch(ScopeError e)
 		{
 			return setErrorMessage(e.getMessage());
 		}
 		
-		/* Return null */
-		return setDataMessage(new JSONObject().element("started", true));
+		/* Return data */
+		return setDataMessage(new JSONObject().element("activated", true));
 	}
 
 	public String getSessionID() 

@@ -41,7 +41,7 @@ public class GraphService
 		public Collection<Node> getConnectedNodes(int nodeIndex);
 	}
 	
-	protected static class Node implements Comparable<Node>
+	public static class Node implements Comparable<Node>
 	{
 		protected final int id;
 		

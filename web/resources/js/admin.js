@@ -138,29 +138,47 @@ function activateSession(sessionID)
 {
 	
 	jQuery.ajax(
+		{
+			url: "/ScopeProject/admin/activateSession",
+			async: true,
+			data: { "sessionID" : sessionID },
+	
+			error:  function(jqXHR, textStatus, errorThrown)
 			{
-				url: "/ScopeProject/admin/activateSession",
-				async: true,
-				data: { "sessionID" : sessionID },
-		
-				error:  function(jqXHR, textStatus, errorThrown)
-				{
-					raiseErrorDialog(errorThrown);
-				},
-				
-				success: function(dataObject, textStatus, jqXHR)
-				{
-					processJSONResult(dataObject);
-				}
-				
-			}).done(function() { })
-			  .fail(function(jqXHR, textStatus) { raiseErrorDialog("Request failed: " + textStatus); })
-			  .always(function() { });
+				raiseErrorDialog(errorThrown);
+			},
+			
+			success: function(dataObject, textStatus, jqXHR)
+			{
+				processJSONResult(dataObject);
+			}
+			
+		}).done(function() { })
+		  .fail(function(jqXHR, textStatus) { raiseErrorDialog("Request failed: " + textStatus); })
+		  .always(function() { });
 }
 
 function runSession(sessionID)
 {
-	alert("Run session "+sessionID);
+	jQuery.ajax(
+		{
+			url: "/ScopeProject/admin/startSession",
+			async: true,
+			data: { "sessionID" : sessionID },
+	
+			error:  function(jqXHR, textStatus, errorThrown)
+			{
+				raiseErrorDialog(errorThrown);
+			},
+			
+			success: function(dataObject, textStatus, jqXHR)
+			{
+				processJSONResult(dataObject);
+			}
+			
+		}).done(function() { })
+		  .fail(function(jqXHR, textStatus) { raiseErrorDialog("Request failed: " + textStatus); })
+		  .always(function() { });
 }
 
 function addSessionTab(sessionName)
@@ -193,25 +211,30 @@ function processJSONResult(dataObject, dataCallback)
 {
 	switch(dataObject.msgType)
 	{
-	// Login required so raise the login window
-	case "login":
-		raiseLoginDialog(dataObject.data);
-		break;
+		// Login required so raise the login window
+		case "login":
+			raiseLoginDialog(dataObject.data);
+			break;
 
 		// Stacktrace result so raise stack trace window
-	case "stackTrace":
-		raiseStackTrace(dataObject.data);
-		break;
+		case "stackTrace":
+			raiseStackTrace(dataObject.data);
+			break;
 
 		// Error result so raise error window
-	case "error":
-		raiseErrorDialog(dataObject.data);
-		break;
+		case "error":
+			raiseErrorDialog(dataObject.data);
+			break;
 
 		// Data result so call callback function
-	case "data":
-		dataCallback(dataObject.data);
-		break;
+		case "data":
+		
+			if(dataCallback != undefined)
+			{
+				dataCallback(dataObject.data);
+			}
+		
+			break;
 	}
 }
 

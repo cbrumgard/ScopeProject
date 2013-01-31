@@ -87,7 +87,7 @@
     
 </head>
 
-<body class="main">
+<body class="main" background="/ScopeProject/resources/images/charcoal-gray-parchment-paper-texture.jpg">
 
 
     <div class="center_panel" >

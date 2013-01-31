@@ -30,7 +30,7 @@ import edu.utk.mabe.scopelab.scope.admin.service.GraphService.Graph;
 import edu.utk.mabe.scopelab.scope.admin.service.GraphService.GraphTypes;
 import edu.utk.mabe.scopelab.scope.admin.service.ScriptService;
 import edu.utk.mabe.scopelab.scope.admin.service.ScriptService.Script;
-import edu.utk.mabe.scopelab.scope.admin.service.SessionService.Session;
+import edu.utk.mabe.scopelab.scope.admin.service.session.Session;
 
 public class CreateSessionAction extends BaseScopeAction 
 	implements ServletContextAware

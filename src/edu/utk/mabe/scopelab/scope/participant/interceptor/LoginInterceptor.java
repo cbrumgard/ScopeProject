@@ -1,10 +1,15 @@
 package edu.utk.mabe.scopelab.scope.participant.interceptor;
 
+import java.io.ByteArrayInputStream;
+import java.io.UnsupportedEncodingException;
+
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 
 import com.opensymphony.xwork2.ActionInvocation;
 import com.opensymphony.xwork2.interceptor.Interceptor;
+
+import edu.utk.mabe.scopelab.scope.JSONResponse;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.struts2.StrutsStatics;
@@ -25,6 +30,17 @@ public class LoginInterceptor implements Interceptor
 		// Do nothing
 	}
 
+	protected void setOutput(ActionInvocation actionInvocation) 
+			throws UnsupportedEncodingException
+	{
+		actionInvocation.getInvocationContext().put("inputStream", 
+			new ByteArrayInputStream(
+					JSONResponse.createLoginRequiredResponse(
+						"/ScopeProject/participant/" +
+								actionInvocation.getInvocationContext()
+									.getName().replace(".action", "")).toBytes()));
+	}
+	
 	@Override
 	public String intercept(ActionInvocation actionInvocation) throws Exception 
 	{
@@ -75,8 +91,10 @@ public class LoginInterceptor implements Interceptor
 				session.setAttribute("originalPath", 
 						actionInvocation.getInvocationContext().getName().replace(".action", ""));
 				
+				setOutput(actionInvocation);
+				
 				/* Need to log in */
-				result = "login";
+				result = "streamOutput";
 			}
 		}
 			

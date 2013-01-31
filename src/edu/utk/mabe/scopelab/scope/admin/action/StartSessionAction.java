@@ -2,6 +2,8 @@ package edu.utk.mabe.scopelab.scope.admin.action;
 
 import javax.servlet.ServletContext;
 
+import net.sf.json.JSONObject;
+
 import org.apache.struts2.util.ServletContextAware;
 
 import edu.utk.mabe.scopelab.scope.BaseScopeAction;
@@ -59,11 +61,12 @@ public class StartSessionAction extends BaseScopeAction
 			return setErrorMessage("Server is not running");
 		}
 		
+		System.out.printf("Starting session %s\n", this.sessionID);
 		
+		/* Starts the session */
+		scopeServer.startSession(sessionID);
 		
-		
-		return null;
+		/* Returns the started message */
+		return setDataMessage(new JSONObject().element("started", true));
 	}
-
-	
 }

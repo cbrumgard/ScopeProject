@@ -8,7 +8,7 @@ import org.apache.struts2.util.ServletContextAware;
 
 import edu.utk.mabe.scopelab.scope.BaseScopeAction;
 import edu.utk.mabe.scopelab.scope.ScopeServer;
-import edu.utk.mabe.scopelab.scope.admin.service.SessionService.Session;
+import edu.utk.mabe.scopelab.scope.admin.service.session.Session;
 
 public class GetSessionStatus extends BaseScopeAction 
 	implements ServletContextAware
@@ -44,16 +44,14 @@ public class GetSessionStatus extends BaseScopeAction
 		{
 			return setErrorMessage("Server is not running");
 		}
-		
-		System.out.println("In GetSessionStatus.execute()");
-		
+	
 		/* Gets the sessionID */
 		Session session = scopeServer.getSession(this.getSessionID());
 		
 		/* Returns data about the session as a json object */
 		return setDataMessage(
 				new JSONObject()
-					.element("Active", session.hasStarted())
+					.element("Active", session.hasActivated())
 					.element("CollectingParticipants", session.isCollectingParticipants())
 					.element("NumberParticipants", session.getNumberofParticipants())
 					.element("MaxNumberOfParticipants", session.getCurrentNumberOfParticipants()));

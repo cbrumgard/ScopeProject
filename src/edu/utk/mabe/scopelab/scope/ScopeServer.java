@@ -21,10 +21,11 @@ import org.apache.commons.collections.map.HashedMap;
 
 import edu.utk.mabe.scopelab.scope.admin.service.StorageService;
 import edu.utk.mabe.scopelab.scope.admin.service.GraphService.Graph;
-import edu.utk.mabe.scopelab.scope.admin.service.MessengingService;
 import edu.utk.mabe.scopelab.scope.admin.service.ScriptService.Script;
-import edu.utk.mabe.scopelab.scope.admin.service.SessionService;
-import edu.utk.mabe.scopelab.scope.admin.service.SessionService.Session;
+import edu.utk.mabe.scopelab.scope.admin.service.messenging.MessengingException;
+import edu.utk.mabe.scopelab.scope.admin.service.messenging.MessengingService;
+import edu.utk.mabe.scopelab.scope.admin.service.session.Session;
+import edu.utk.mabe.scopelab.scope.admin.service.session.SessionService;
 
 public class ScopeServer
 {
@@ -84,9 +85,9 @@ public class ScopeServer
 		return session;
 	}
 	
-	public String createMessageQueue() throws JMSException
+	public String createMessageQueue() throws MessengingException
 	{
-		return messagingService.createQueue().toString();
+		return messagingService.createQueue().getName();
 	}
 	
 	public Session getSession(String sessionID) throws ScopeError
@@ -101,8 +102,8 @@ public class ScopeServer
 		return session;
 	}
 	
-	public void startSession(String sessionID) 
-			throws ScopeError, JMSException, SQLException
+	public void activateSession(String sessionID) 
+		throws ScopeError, SQLException, MessengingException
 	{
 		Session session = sessionMap.get(sessionID);
 		
@@ -112,6 +113,19 @@ public class ScopeServer
 		}
 		
 		session.activate();
+	}
+	
+	public void startSession(String sessionID) 
+		throws ScopeError, MessengingException
+	{
+		Session session = sessionMap.get(sessionID);
+		
+		if(session == null)
+		{
+			throw new ScopeError("No such session");
+		}
+		
+		session.start();
 	}
 	
 	public Iterable<SessionDescription> getActiveSessions() throws SQLException

@@ -23,7 +23,7 @@ import edu.utk.mabe.scopelab.scope.admin.service.GraphService.Graph;
 import edu.utk.mabe.scopelab.scope.admin.service.GraphService.Node;
 import edu.utk.mabe.scopelab.scope.admin.service.ScriptService.Event;
 import edu.utk.mabe.scopelab.scope.admin.service.ScriptService.Script;
-import edu.utk.mabe.scopelab.scope.admin.service.SessionService.Session;
+import edu.utk.mabe.scopelab.scope.admin.service.session.Session;
 
 public class StorageService 
 {
@@ -409,7 +409,7 @@ public class StorageService
 	}
 	
 	public void storeActiveSession(Session session) 
-			throws SQLException, JMSException
+			throws SQLException
 	{
 		long currTime = System.currentTimeMillis();
 		
@@ -420,7 +420,7 @@ public class StorageService
 		{
 			statement.execute("USE Scope");
 			
-			pstat.setString(1, session.sessionID);
+			pstat.setString(1, session.getSessionID());
 			pstat.setString(2, session.getJoinQueueName());
 			pstat.setLong(3, currTime);
 
@@ -442,7 +442,7 @@ public class StorageService
 			pstat = conn.prepareStatement(
 					"INSERT INTO sessions(sessionID, last_update) VALUES(?,?)");
 
-			pstat.setString(1, session.sessionID);
+			pstat.setString(1, session.getSessionID());
 			pstat.setLong(2, currTime);
 
 			pstat.execute();

@@ -6,7 +6,7 @@ import org.apache.struts2.util.ServletContextAware;
 
 import edu.utk.mabe.scopelab.scope.BaseScopeAction;
 import edu.utk.mabe.scopelab.scope.ScopeServer;
-import edu.utk.mabe.scopelab.scope.admin.service.MessengingService;
+import edu.utk.mabe.scopelab.scope.admin.service.messenging.MessengingService;
 
 public class GetMainPageAction extends BaseScopeAction 
 	implements ServletContextAware

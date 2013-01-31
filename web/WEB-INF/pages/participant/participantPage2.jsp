@@ -27,7 +27,10 @@
             newSessionAnnouncementTopicName: "/topic/" +
               '<s:property value="newSessionAnnouncementTopicName"/>',
             
-            webSocket : null,   
+            webSocket : null,
+            toServerDestination : null,
+            
+            neighbors : { },
         };
    
     function getActiveSessions(callback) 
@@ -38,11 +41,9 @@
                 url : "/ScopeProject/participant/getActiveSessionList",
                 async : true,
                 type : "POST",
-
-                error : function(jqXHR,
-                        textStatus, errorThrown) {
-                    jQuery("#main_div").html(
-                            textStatus);
+                data : { 'participantID' : scopeParticipantApp.participantID.toString()  },
+                error : function(jqXHR,textStatus, errorThrown) {
+                    jQuery("#main_div").html(textStatus);
                 },
 
                 success : function(dataObject, textStatus, jqXHR) 
@@ -90,7 +91,7 @@
                     	scopeParticipantApp.activeSessions[sessionID] = 
                     		   { 
                     			 sessionID: sessionID,
-                    			 joinDestination: response.joinDestination
+                    			 joinDestination: response.joinDestination.replace("queue://", "/queue/")
                     		   };
 
                         addSessionToSessionSelectBox(sessionID);
@@ -140,8 +141,6 @@
     function getParticipantID()
     {
     	jQuery('#participant_dialog').dialog("open");
-    	
-    	console.log(jQuery('#participant_dialog'));
     }
     
   
@@ -157,17 +156,19 @@
     
     function raiseErrorDialog(errMsg)
     {
-        jQuery("#error-dialog-message").html(errMsg);
-        jQuery("#error-dialog").dialog("open");
+        jQuery("#error_dialog_message").html(errMsg);
+        jQuery("#error_dialog").dialog("open");
     }
     
     function processJSONResult(dataObject, dataCallback)
     {
+    	console.log(dataObject);
+    	
         switch(dataObject.msgType)
         {
            // Login required so raise the login window
            case "login":
-              raiseLoginDialog(dataObject.data);
+        	  raiseErrorDialog('You must login first'); //getParticipantID();
               break;
               
            // Stacktrace result so raise stack trace window
@@ -197,6 +198,92 @@
 		jQuery("#session_select").show();
 	}
 
+    function processNewsFeedMessage(dataObject)
+    {
+    	console.log(dataObject);
+    
+    	// Display the message in the NewsFeed 
+    	jQuery('#NewsFeed').append(dataObject['message'] +'\n');
+    }
+    
+    function choiceMade(value)
+    {
+    	// Sends a response to the session
+    	var client = getConnection();
+    
+    	client.send(scopeParticipantApp.toServerDestination, {}, 
+                JSON.stringify(
+                {
+                    participantID : scopeParticipantApp.participantID.toString(),
+                    choice : value,
+                }));  
+    	
+    	jQuery("#choices").hide();
+    }
+    
+    function processChoiceMessage(dataObject)
+    {
+    	console.log(dataObject);
+    	
+    	
+    	// Remove the previous choice
+    	jQuery('#choices_table').empty();
+    	
+    	// Add the choice
+    	var content = "<tr width='100%'><td style='text-align:center;'>"+dataObject.choice+"</td></tr>";
+    	
+    	content += "<tr>";
+    	
+    	jQuery.each(dataObject.choices, function(index, value)
+            {
+    		     content += "<td style='text-align:center;'><button onclick=choiceMade('"+value+"')>"+value+"</button></td>";
+    		});
+    	
+    	content += "</tr>";
+    	
+    	jQuery('#choices_table').append(content);
+    	
+    	jQuery("#choices").show();
+    }
+    
+    function processNeighbors(dataObject)
+    {
+    	console.log(dataObject);
+    	
+    	// Traverses the list neighbors
+    	jQuery.each(dataObject['neighbors'], function(neighborID, neighbor)
+    		{
+    	        console.log(neighbor);
+    	        console.log(neighbor.id);
+    		    
+    	        var rowid = "neighbors_table_tr_"+neighborID;
+    		    
+    		    // Neighbor is not already in the list 
+                if(neighbor.id in scopeParticipantApp.neighbors == false)
+                {   
+                    scopeParticipantApp.neighbors[neighbor.id] = neighbor;
+                
+                    // Insert into table
+                    jQuery('#neighbors_table').append('<tr id="'+rowid+'"><td>'+neighbor.id+'</td><td></td></tr>');
+                }
+    		});
+    }
+    
+    
+    function processNeighborUpdate(dataObject)
+    {
+    	console.log(dataObject);
+    	
+    	var rowid = "neighbors_table_tr_"+dataObject.neighborID;
+    	
+    	jQuery(rowid).empty();
+    	
+    	jQuery('#'+rowid).replaceWith(
+    		'<tr id="'+rowid+'"><td>'+dataObject.neighborID+'</td><td>'+
+    		dataObject.choice+'</td></tr>');
+    }
+    
+    
     function requestToJoinSession(sessionID)
     {
     	console.log("Requesting to join sessionID = "+sessionID);
@@ -208,7 +295,7 @@
 			    	url : "/ScopeProject/participant/getMessageQueue",
 			        async : false,
 			        type : "POST",
-			
+			        data : { 'participantID' : scopeParticipantApp.participantID.toString() },
 			        error : function(jqXHR, textStatus, errorThrown) 
 			                {
 			                   alert(textStatus);
@@ -218,9 +305,10 @@
 			        {
 			            processJSONResult(dataObject, function(data) 
 			                    {
-			                       console.log("queue = "+data.queueName);
-			                       
-			                       queueName = data.queueName;
+			            	        // Close the session dialog box
+                                   jQuery("#session_dialog").dialog("close");
+			            	  
+			                       queueName = data.queueName.replace("queue://", "/queue/");
 			                    });
 			        }
 			
@@ -241,15 +329,16 @@
     	
     	var session = scopeParticipantApp.activeSessions[sessionID];
     	
-    	console.log("destination = "+"/queue/"+session.joinDestination);
+    	console.log(session);
+    	console.log("destination = "+session.joinDestination);
     	
     	console.log("ParticipantID = "+ scopeParticipantApp.participantID.toString());
     	
     	
-    	console.log("Queuename = "+queueName.replace("queue://", "/queue"));
+    	console.log("Queuename = "+queueName);
     	
     	// Subscribe for response from the scope server
-    	client.subscribe(queueName.replace("queue://", "/queue/"), function(message)
+    	id = client.subscribe(queueName, function(message)
     			{
     		         console.log("Message = "+message);
     		         
@@ -259,44 +348,60 @@
     		        		 {		        	 
     		        	         alert("Successfully joined!!!");
     		        	         
-    		        	         console.log("data = " + data);
+    		        	         console.log(data);
     		        	         
-    		        	         for(var i=0; i<data["ListenQueues"].length; i++)
-    		        	         {
-    		        	        	 var listenQueue = "/queue/"+data["ListenQueues"][i];
-    		        	        	 
-    		        	        	 console.log(listenQueue);
-    		        	        	 
-    		        	        	 client.subscribe(listenQueue, function(message)
-    		        	        			 {
-    		        	        		         console.log(message);
-    		        	        			 });
-    		        	         }
+    		        	         client.unsubscribe(id);
     		        	         
-    		        	         var topicName = "/topic/"+data["PublishTopic"];
-    		        	         console.log(topicName);
-    		        	         
-    		        	         var counter = 0;
-    		        	         
-    		        	         setInterval(function()
+    		        	         client.subscribe(queueName, function(message)
     		        	            {
-    		        	        	    console.log("sending message to "+topicName);
-    		        	        	    client.send(topicName, {}, "Hello there "+(counter++));
-    		        	            }, 3000);
-    		        	        	
+    		        	        	    console.log(message);    
+    		        	        	    
+    		        	        	    /* Processes the messages */
+    		        	        	    processJSONResult(JSON.parse(message.body), function(data)
+    		        	        	    {
+    		        	        	        /* By message subtype */
+	    		        	        	    switch(data['type'])
+	    		        	        	    {
+	    		        	        	        // Neighbors
+	    		        	        	        case 'neighbors':
+	    		        	        	        	processNeighbors(data);
+	    		        	        	            break;
+	    		        	        	            
+	    		        	        	        // News feed 
+	    		        	        	        case 'newsfeed':
+	    		        	        	        	processNewsFeedMessage(data);
+	    		        	        	        	break;
+	    		        	        	            
+	    		        	        	        // Choice
+	    		        	        	        case 'choice':
+	    		        	        	        	processChoiceMessage(data);
+	    		        	        	        	break;
+	    		        	        	        	
+	    		        	        	        // Neighbors Update
+	    		        	        	        case 'neighbor update':
+	    		        	        	        	processNeighborUpdate(data);
+	    		        	        	        	break;
+	    		        	        	        	
+	    		        	        	        // Unknown
+	    		        	        	        default:
+	    		        	        	        	alert('Unknown message type');
+	    		        	        	        	break;
+	    		        	        	    }
+    		        	        	    });
+    		        	            });
+    		        	         
+    		        	         // Stores the queue for sending messages
+    		        	         scopeParticipantApp.toServerDestination = 
+    		        	        	 data["toServerDestination"].replace("queue://", "/queue/");
     		        		 });
-    		         
-    		        
-    		    
     			});
     	
-    	
     	// Send the request to join the session 
-    	client.send("/queue/"+session.joinDestination, {}, 
+    	client.send(session.joinDestination, {}, 
     			JSON.stringify(
     			{
     			    participantID : scopeParticipantApp.participantID.toString(),
-    			    queueName : queueName
+    			    queueName : queueName.replace("/queue/", "queue://")
     		    }));    	
     }
     
@@ -347,11 +452,11 @@
 											jQuery('#participant_dialog')
 													.dialog("close");
 
-											if(scopeParticipantApp.sessionID == null) 
-											{
-												jQuery("#session_dialog")
-														.dialog("open");
-											}
+											//if(scopeParticipantApp.sessionID == null) 
+											//{
+											//	jQuery("#session_dialog")
+											//			.dialog("open");
+											//}
 										}
 									}
 								});
@@ -377,7 +482,7 @@
 											scopeParticipantApp.activeSessions[session.sessionID] =   
 											    { 
 					                                 sessionID: session.sessionID,
-					                                 joinDestination: session.joinDestination.replace("queue://","")
+					                                 joinDestination: session.joinDestination.replace("queue://", "/queue/")
 					                            };
 	
 	                                        addSessionToSessionSelectBox(session.sessionID);
@@ -391,16 +496,56 @@
 						// Need to get the participant ID
 						if(scopeParticipantApp.participantID == null) 
 						{
-							scopeParticipantApp.participantID = getParticipantID();
+							//scopeParticipantApp.participantID = getParticipantID();
 						}
 
 						
 						//Hide the session select box 
 						jQuery("#session_select").hide();
 
+					
+					    // Signin button
+						jQuery('#signin_button').button().click(
+							function()
+							{
+								scopeParticipantApp.participantID = getParticipantID();
+							});
+					    
+						jQuery('#join_button').button().click(
+                            function()
+                            {
+                                // No participant id 
+                            	if(scopeParticipantApp.participantID == null)
+                            	{
+                            		raiseErrorDialog('You must login first');
+                            		return;
+                            	}
+                            	
+                                // Already a member of a session
+                            	if(scopeParticipantApp.sessionID != null)
+                            	{
+                            		raiseErrorDialog('Already participating in '
+                            				+ scopeParticipantApp.sessionID);
+                            	}
+                            	
+                                // Open the session dialog box
+                                jQuery("#session_dialog").dialog("open");
+                            });
+					
+						jQuery('#reset_button').button().click(
+                            function()
+                            {
+                                alert("Reset");
+                            });
 						
-
+						jQuery('#quit_button').button().click(
+                            function()
+                            {
+                                alert("Quit");
+                            });
 						
+						
+						jQuery("#choices").hide();
 					});
 	
 	 
@@ -408,16 +553,22 @@
 
 
 <style type="text/css">
-body.main {
+body.main 
+{
+    font-family: "Trebuchet MS", "Helvetica", "Arial", "Verdana",
+            "sans-serif";
+    font-size: 90%;
+        
 	background-color: #e1ddd9;
-	font-size: 12px;
+	
 	color: #564b47;
 	padding: 20px;
 	margin: 0px;
 	text-align: center;
 }
 
-div.center_panel {
+div.center_panel 
+{
 	text-align: left;
 	vertical-align: middle;
 	margin: 0px auto;
@@ -427,18 +578,40 @@ div.center_panel {
 	border: 1px;
 	height: 600px;
 }
+
+#toolbar 
+{
+    padding: 4px;
+   /* display: inline-block; */
+    /*margin-top: 50px;*/
+    margin-bottom: 10px;
+    margin-left: 50px;
+    margin-right: 50px;
+}
+
+#choices
+{
+    padding: 4px;
+   /* display: inline-block; */
+    /*margin-top: 50px;*/
+    margin-bottom: 10px;
+    margin-left: 50px;
+    margin-right: 50px;
+}
+
+
 </style>
 
 
 
 
 </head>
-<body class="main">
-	<div class="center_panel">
+<body class="main" background="/ScopeProject/resources/images/charcoal-gray-parchment-paper-texture.jpg">
+	<div class="center_panel ui-widget-header ui-corner-all" style="background:white;">
 
         <!-- Error dialog -->
         <div id="error_dialog" title="Error Occurred">
-            <p id="error-dialog-message"></p>
+            <p id="error_dialog_message"></p>
         </div>
         
         <!-- Stacktrace -->
@@ -462,27 +635,72 @@ div.center_panel {
             </select>
         </div>
         
+        <br/>
+        <div style="text-align:center;font-size:28px;">
+            Participant Interface
+        </div>
+        <br/>
+        
+        <!-- Toolbar -->
+        <div id="toolbar" class='ui-widget-header ui-corner-all' 
+             style="text-align:center;background:none">
+            <button id='signin_button' style="font-size:12px;">Sign in</button>
+            <button id='join_button' style="font-size:12px;">Join Test</button>
+            <button id='reset_button' style="font-size:12px;">Reset</button>
+            <button id='quit_button' style="font-size:12px;">Quit</button>
+        </div>
+        
+     
+        <table width='100%'>
+            <tr><td style="text-align:right;" width="50%">Status:</td><td></td></tr>
+        </table>
+        <!--  <div style="text-align:center;">Status: Huh?</div> -->
+        
+        <br/>
+        
         <table width="100%">
-            <tr>
+            <tr style="text-align:center;vertical-align:top;">
                 <td width="50%">
-                    <div class="ui-widget ui-state-default ui-corner-all" title="News Feed">
-                        News Feed
-                    </div>
+                    <table class="ui-widget-header ui-corner-all" 
+                        style="text-align:center;background:none"
+                        width="100%"
+                        title="News Feed"> 
+                        <tr><td style="text-align:center;">News Feed<br/><hr width="30%"/></td></tr>
+                        <tr><td width="100%">
+                            <div  style="width:95%;">
+                            <textarea id='NewsFeed' readonly rows="10" style="resize:none;width:95%;border:none"></textarea>
+                            </div>
+                        </td></tr>
+                    </table>
                 </td>
-                <td width="50%">
-                    <div class="ui-widget ui-state-default ui-corner-all" title="Neighbors">
-                        Neighbors
-                    </div>
-                </td>
-            </tr>
-            <tr>
-                <td>
-                    <div class="ui-widget ui-state-default ui-corner-all" title="Buttons">
-                       buttons
-                    </div>
+                <td width="50%" height="100%">
+                    <table class="ui-widget-header ui-corner-all" 
+                        style="text-align:center;background:none"
+                        width='100%' 
+                        title="Neighbors">
+                        <tr>
+                            <td style="text-align:center;vertical-align:top;">
+                                Neighbors<br/><hr width="30%"/>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <table id="neighbors_table" height="100%">
+                                </table>
+                            </td>
+                        </tr>
+                    </table>
                 </td>
             </tr>
         </table>
+        
+        <br/></br>
+        
+        <div id="choices" class='ui-widget-header ui-corner-all' 
+             style="text-align:center;background:none" title="Choices">
+             Choices<br/><hr width="20%"/>
+             <table id="choices_table" width="100%" style="text-align:center;"></table>
+        </div>
         
 	</div>
 </body>

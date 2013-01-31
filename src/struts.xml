@@ -73,6 +73,10 @@
             <interceptor-ref name="adminStack" />
         </action>
         
+        <action name="startSession" class="edu.utk.mabe.scopelab.scope.admin.action.StartSessionAction">
+            <interceptor-ref name="adminStack" />
+        </action>
+        
         <action name="getSessionStatus" class="edu.utk.mabe.scopelab.scope.admin.action.GetSessionStatus">
             <interceptor-ref name="adminStack" />
         </action>
@@ -110,7 +114,7 @@
             </interceptor-stack>
         </interceptors>
         
-        <default-interceptor-ref name="participantStack" />
+        <!--  <default-interceptor-ref name="participantStack" /> -->
         
         <global-results>
             <result name="streamOutput" type="stream">
@@ -125,19 +129,23 @@
         </action>
         
         <action name="logout" class="edu.utk.mabe.scopelab.scope.participant.action.LogoutAction">
+            <interceptor-ref name="participantStack" />
             <result name="logout">/WEB-INF/pages/participant/logoutPage.jsp</result>
         </action>
         
         <action name="getActiveSessionList" 
             class="edu.utk.mabe.scopelab.scope.participant.action.GetActiveSessionListAction">
+            <interceptor-ref name="participantStack" />
         </action>
         
         <action name="getWebSocketAddress" 
             class="edu.utk.mabe.scopelab.scope.participant.action.GetWebSocketAddress">
+            <interceptor-ref name="participantStack" />
         </action>
         
         <action name="getMessageQueue" 
             class="edu.utk.mabe.scopelab.scope.participant.action.GetMessageQueueAction">
+            <interceptor-ref name="participantStack" />
         </action>
         
         <action name="*" class="edu.utk.mabe.scopelab.scope.participant.action.GetMainPageAction">

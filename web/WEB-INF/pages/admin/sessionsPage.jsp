@@ -62,8 +62,7 @@ function getSessionStatus(sessionID)
             	              ' of '+ data['MaxNumberOfParticipants'] + '<br/>';
             	
             	              
-            	console.log("True = "+parseInt(data['CollectingParticipants']) == 
-                    parseInt(data['MaxNumberOfParticipants']));
+            	console.log(data['NumberParticipants'] + " " +data['MaxNumberOfParticipants']);
             	
             	if(data['Active'] == false)
             	{
@@ -71,11 +70,11 @@ function getSessionStatus(sessionID)
             			"<button type='button' onclick='activateSession("+
             			'"'+sessionID+'"'+")'>Activate Session</button>";
             				
-            	}else if(data['CollectingParticipants'] == 
+            	}else if(data['NumberParticipants'] == 
             		     data['MaxNumberOfParticipants'])
             	{
             		tabContent += 
-                        "<button type='button' onclick='runSession("+
+                        "<button type='button' onclick='runSession(" +
                         '"'+sessionID+'"'+")'>Run Session</button>";
             	}
             	              

@@ -10,7 +10,11 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
+import au.com.bytecode.opencsv.CSVReader;
+
+import com.google.common.collect.Iterables;
 import com.google.common.collect.LinkedListMultimap;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.TreeMultimap;
 
@@ -21,7 +25,7 @@ public class ScriptService
 	public static class Script
 	{
 		protected final Multimap<Integer, Event> eventsByIteration;
-			
+		protected final Integer highestIteration;	
 		
 		Script(Collection<Event> events)
 		{
@@ -50,10 +54,21 @@ public class ScriptService
 			
 			
 			
+			int highestIteration = 0;
+			
 			for(Event event : events)
 			{
+				
+				highestIteration = Math.max(highestIteration, event.getIteration());
 				eventsByIteration.put(event.getIteration(), event);
 			}
+			
+			this.highestIteration = highestIteration;		
+		}
+		
+		public int getHighestIteration()
+		{
+			return this.highestIteration;
 		}
 		
 		public Collection<Event> getEventsForIteration(int i)
@@ -65,9 +80,14 @@ public class ScriptService
 		{
 			return this.eventsByIteration.values();
 		}
+		
+		public Collection<NewsEvent> getAllNewsEvents()
+		{
+			return Lists.newArrayList(Iterables.filter(this.getAllEvents(), NewsEvent.class));
+		}
 	}
 	
-	abstract static class Event
+	public abstract static class Event
 	{
 		protected final int iteration;
 		protected final int duration;
@@ -89,10 +109,10 @@ public class ScriptService
 		}
 	}
 	
-	static class NewsEvent extends Event
+	public static class NewsEvent extends Event
 	{
 		/* Instance variables */
-		private final String message;
+		protected final String message;
 		
 		
 		NewsEvent(int iteration, int duration, String message)
@@ -108,25 +128,54 @@ public class ScriptService
 		}	
 	}
 	
+	public static class ChoiceEvent extends Event
+	{
+		/* Instance variables */
+		protected final Collection<Integer> participants;
+		protected final String message;
+		protected final Collection<String> choices;
+		
+		
+		ChoiceEvent(int iteration, int duration, Collection<Integer> participants,
+				String message, Collection<String> choices) 
+		{
+			super(iteration, duration);
+			
+			this.participants = participants;
+			this.message	  = message;
+			this.choices      = choices;
+		}
+
+		public Collection<Integer> getParticipants() 
+		{
+			return participants;
+		}
+
+		public String getMessage() 
+		{
+			return message;
+		}
+
+		public Collection<String> getChoices() 
+		{
+			return choices;
+		}
+	}
+	
 	
 	public static Script parseScript(String script) throws ScopeError
 	{	
 		List<Event> events = new LinkedList<>();
 		
-		
-		try(LineNumberReader input = new LineNumberReader(new StringReader(script)))
-		{
-			for(String line = input.readLine(); line != null; line = input.readLine())
+
+		try(CSVReader input = new CSVReader(new StringReader(script)))
+		{	
+			for(String[] fields : input.readAll())
 			{
-				System.out.println(line);
-				
-				String[] fields = line.split(",", 4);
-				
 				/* Must have 3 fields (iteration, duration, event type) */
-				if(fields.length < 2)
+				if(fields.length < 3)
 				{
-					throw new ScopeError("Invalid script file at line "+
-											input.getLineNumber());
+					throw new ScopeError("Invalid script file");
 				}
 				
 				/* Gets the iteration and duration */
@@ -134,6 +183,7 @@ public class ScriptService
 				int duration  = Integer.parseInt(fields[1].trim());
 				
 				System.out.printf("iteration = %d duration = %d type = %s\n", iteration, duration, fields[2]);
+				
 				switch(fields[2].trim().toLowerCase())
 				{
 					/* News event */
@@ -141,21 +191,72 @@ public class ScriptService
 						
 						System.out.printf("News event\n");
 						
-						if(fields.length != 4)
+						if(fields.length < 4)
 						{
-							throw new ScopeError("Invalid script file at line "+
-									input.getLineNumber());
+							System.out.printf("Field length = %d\n", fields.length);
+							
+							for(int i=0; i<fields.length; i++)
+							{
+								System.out.printf("field[%d] = %s\n", i, fields[i]);
+							}
+							
+							throw new ScopeError("Invalid script file ");
 						}
 						
-						events.add(new NewsEvent(iteration, duration, fields[2]));
+						events.add(new NewsEvent(iteration, duration, fields[3]));
 						
 						break;
 					
+					/* Choice event */
+					case "choice":
+						
+						System.out.printf("Choice event");
+						
+						if(fields.length < 6)
+						{
+							System.out.printf("Field length = %d\n", fields.length);
+							
+							for(int i=0; i<fields.length; i++)
+							{
+								System.out.printf("field[%d] = %s\n", i, fields[i]);
+							}
+							
+							throw new ScopeError("Invalid script file ");
+						}
+						
+						/* Gets the participants (field 4) */
+						System.out.printf("Participants = %s\n", fields[3]);
+						
+						List<Integer> participants = new LinkedList<>();
+						
+						for(String participantID : fields[3].split(","))
+						{
+							participants.add(Integer.parseInt(participantID));
+						}
+						
+						
+						/* Gets the message (field 5) */
+						String message = fields[4];
+						
+						/* Gets the choices (field 6) */
+						System.out.printf("Choices = %s", fields[5]);
+						
+						List<String> choices = new LinkedList<String>();
+						
+						for(String choice : fields[5].split(","))
+						{
+							choices.add(choice);
+						}
+		
+						events.add(new ChoiceEvent(iteration, duration, 
+								   participants, message, choices));
+						
+						break;
+						
 					/* Unknown event type */
 					default:
 						throw new ScopeError(
-							"Invalid script file: Unknown event type at line "+
-							input.getLineNumber());
+							"Invalid script file: Unknown event type ");
 				}
 				
 			}
