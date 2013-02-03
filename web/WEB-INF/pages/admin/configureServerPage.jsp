@@ -12,6 +12,8 @@
     
     function getInterfaces()
     {
+    	jQuery('#getInterfacesProgressWheelImg').toggle();
+    	
         jQuery.ajax(
             {
                 url:      "/ScopeProject/admin/getNetworkInterfacesAction",
@@ -44,6 +46,8 @@
                        case "data":
                            
                            console.log("Inside of data case");
+                            
+                           jQuery("#hostname-select").empty();
                            
                            for(var hostname in dataObject.data) 
                            {
@@ -53,7 +57,9 @@
                             		 "<option value='"+hostname+"'>"+hostname+"</option>");
                            }
                            
-                          break;
+                           jQuery('#getInterfacesProgressWheelImg').toggle();
+                           
+                           break;
                     }
                 }
                 
@@ -73,10 +79,10 @@
     	jQuery("#progress-dialog").dialog("open");
     	
     	
-    	jQuery("#progressbar").progressbar(
-                {
-                   value: 50
-                });
+    	//jQuery("#progressbar").progressbar(
+        //        {
+        //           value: 50
+        //        });
     	
     	var p = { hostname: hostname, port: port};
     	console.log(p);
@@ -88,13 +94,15 @@
     			   type: "POST",
     			   data: { hostname: hostname, port: port},
     		   
-    		       success: function(dataObject, textStatus, jqXHR)
+    		       success: function(data, textStatus, jqXHR)
     		       {
-    		    	   processJSONResult(dataObject, 
-    		    			   function() 
-    		    			   { 
-    		    		          jQuery("#progress-dialog").dialog("close");
-    		    			   });   
+    		    	   jQuery("#progress-dialog").dialog("close");
+    		    	   
+    		    	   processJSONResult(data, function(dataObject) 
+   		    			   { 
+   		    		           // Success
+   		    		           getTestPage('/ScopeProject/admin/getServerStatusPage', {});
+   		    			   });   
     		       }
     		   });
     	
@@ -121,7 +129,9 @@
 
 
 <div id="progress-dialog" title="Starting Server">
-    <div id="progressbar"></div>
+    <img src="/ScopeProject/resources/images/progress_wheel.gif" /><br/>
+    Waiting on the server...
+    <!-- <div id="progressbar"></div>  -->
 </div>
 
 Enter the following information and press start
@@ -131,7 +141,17 @@ to run the server.
     <table>
         <tr>
            <td>Hostname:</td>
-           <td><select id="hostname-select"/></td>
+           <td>
+                <select id="hostname-select" style="width: 100%">
+                    <option>Fetching...</option>
+                </select>
+           </td>
+           <td style='vertical-align: middle;text-align: center;'>
+                <img id='getInterfacesProgressWheelImg' 
+                     style='display: none;'
+                     src="/ScopeProject/resources/images/progress_wheel.gif" 
+                     height="33%"/>
+           </td>
         </tr>
         <tr>
             <td>Port:</td>

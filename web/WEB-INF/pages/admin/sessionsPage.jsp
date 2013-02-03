@@ -14,18 +14,21 @@ jQuery(document).ready(
 	    function() 
 	    {
 	    	// Creates the session tabs (hidden)
-	        jQuery("#session_tabs").tabs(
-	                {
-
-	                });
-	    	
-	    
+	        var sessionTabs = jQuery("#session_tabs").tabs();
+	        
+	       // sessionTabs.tabs("enable");
+	       
 	        for(key in adminSessionsToWatch)
 	        {
 	        	addSessionTab(key);
 	        };
 	        
+	        
+	     
 	      
+	        sessionTabs.tabs('select', sessionTabs.tabs( "length")-1);
+	       
+	        
 	        getSessionStatus("<s:property value='sessionName' />");
 	    });
 

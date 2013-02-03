@@ -26,38 +26,36 @@ function changeSelection()
 </head>
 <body>
 
-Backend storage page!!!
-
-<br/>
-
 <!-- Backend is not initialized -->
-<s:if test="%{initialized == false}">
-    Backend storage page is not initialized. <br />
-    
-    <s:form method="post" 
-            label="Initialization Parameters" 
-            action="InitializeBackendStorageAction">
-        <s:select name="strategy" 
-                  key="strategy"
-                  label="Strategy" 
-                  list="#{'SimpleStrategy':'SimpleStrategy'}" 
-                  onchange="changeSelection();"
-                 />
-        <s:div id="options" name="options">
-            <!-- Extra form stuff goes here -->
-            
-            <s:select label="Replication Factor"
-                      key="replicationFactor" 
-                      list="#{'1':'1', '2':'2', '3':'3'}" />
-            
-        </s:div>
-        <s:submit value="initialize backend storage" /> 
-    </s:form>
-    
+<s:if test='%{initialized == false}'>
+    Status: Storage is not initialized. 
+    <br /><br /><br />
+    Initialization Parameters:<br />
+    <div style='text-indent: 20px'>
+	    <s:form method="post" 
+	            label="Initialization Parameters" 
+	            action="InitializeBackendStorageAction">
+	        <s:select name="strategy" 
+	                  key="strategy"
+	                  label="Strategy" 
+	                  list="#{'SimpleStrategy':'SimpleStrategy'}" 
+	                  onchange="changeSelection();"
+	                 />
+	        <s:div id="options" name="options">
+	            <!-- Extra form stuff goes here -->
+	            
+	            <s:select label="Replication Factor"
+	                      key="replicationFactor" 
+	                      list="#{'1':'1', '2':'2', '3':'3'}" />
+	            
+	        </s:div>
+	        <s:submit align="center" value="Initialize Storage" /> 
+	    </s:form>
+    </div>
 </s:if>
 
 <s:else>
-
+    Status: Storage has already been initialized.
 </s:else>
 
 </body>

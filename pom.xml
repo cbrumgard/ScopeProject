@@ -43,6 +43,7 @@
                     <directory>web</directory>
                 </resource>
             </webResources>
+            <!-- <packagingIncludes>web/WEB-INF/lib/cassandra-jdbc-1.1.1.jar</packagingIncludes>  -->
         </configuration>
     </plugin>
     </plugins>
@@ -92,6 +93,11 @@
   	<dependency>
   		<groupId>org.apache.cassandra</groupId>
   		<artifactId>cassandra-clientutil</artifactId>
+  		<version>1.2.0</version>
+  	</dependency>
+  	<dependency>
+  		<groupId>org.apache.cassandra</groupId>
+  		<artifactId>cassandra-thrift</artifactId>
   		<version>1.2.0</version>
   	</dependency>
   </dependencies>

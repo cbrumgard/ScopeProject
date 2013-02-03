@@ -8,12 +8,15 @@
     <meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
     <title>ServerPage</title>
 </head>
-<body>
+<body style="vertical-align: top;">
 
 Server Information<br/><br/>
 
 <s:if test="%{scopeServer != null}">
-    Server initialized!!!
+    Server Running!!!
+    
+    <br />
+    Websocket: <s:property value="%{scopeServer.getMessengingService().getWebSocketURI()}"/>
 </s:if>
 <s:else>
     Server not initialized!!!

@@ -90,7 +90,7 @@
 <body class="main" background="/ScopeProject/resources/images/charcoal-gray-parchment-paper-texture.jpg">
 
 
-    <div class="center_panel" >
+    <div class="center_panel ui-widget-header ui-corner-all" style="background:white;">
 
 
     <!-- login dialog -->
@@ -120,44 +120,46 @@
     </div>
     
     <!-- Title -->
-    <h2 class="center">Admin Page</h2><br />
+    <br />
+    <h1 class="center" style='text-align: center;'>Admin Interface</h1>
+    <hr width="80px">
+    <br />
     
     <table>
-    <tr>
-    <td>
-    <!-- Menu area -->
-	<div class="menu">
-	    <ul id="menu">
-	        <li>
-	           <a href="#serverPage">Server</a>
-	           <ul>
-	               <li><a href="#serverPage">View</a></li>
-	               <li><a href="#configureServerPage">Configure</a></li>
-	           </ul>
-	        </li>
-            <li>
-                <a href="#backendstorage">Storage</a>
-                <ul>
-                    <li><a href="#backendstorage">Configure</a></li>
-                </ul>
-            </li>
-	        <li>
-	           <a href="#createSession">Session</a>
-	           <ul>
-	               <li><a href="#createSession">Create</a>
-	           </ul>
-	        </li>
-	        <li><a href="/ScopeProject/admin/logout.action" >Logout</a></li>
-	    </ul> 
-	</div>
-	</td>
-    <td>
-    <!-- Main area -->
-    <div class="main" id="main_div">
-        Main Window 
-    </div>
-    </td>
-    </tr>   
+        <tr>
+            <td style="vertical-align: top;">
+			    <!-- Menu area -->
+				<div class="menu">
+				    <ul id="menu">
+				        <li>
+				           <a href="#serverPage">Server</a>
+				           <ul>
+				               <li><a href="#serverPage">View</a></li>
+				               <li><a href="#configureServerPage">Configure</a></li>
+				           </ul>
+				        </li>
+			            <li>
+			                <a href="#backendstorage">Storage</a>
+			                <ul>
+			                    <li><a href="#backendstorage">Configure</a></li>
+			                </ul>
+			            </li>
+				        <li>
+				           <a href="#createSession">Session</a>
+				           <ul>
+				               <li><a href="#createSession">Create</a>
+				           </ul>
+				        </li>
+				        <li><a href="/ScopeProject/admin/logout.action" >Logout</a></li>
+				    </ul> 
+				</div>
+	       </td>
+           <td style="vertical-align: top;">
+                <!-- Main area -->
+                <div class="main" id="main_div" style="vertical-align: top;">
+                </div>
+           </td>
+        </tr>   
     </table>
     
     <!-- <div class="clear"></div> -->
