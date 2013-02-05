@@ -176,6 +176,8 @@ public class CreateSessionAction extends BaseScopeAction
 		{
 			return result;
 		}
+		
+		System.out.println("Past Validate\n");
 
 		/* Produces the script from the script description */
 		Script script = ScriptService.parseScript(this.scriptfile);
@@ -196,7 +198,7 @@ public class CreateSessionAction extends BaseScopeAction
 			/* User specified graph file */
 			case USER:
 	
-				
+				System.out.println("Reading graphfile\n");
 				/* Read the graph file */
 				try(BufferedReader input = new BufferedReader(new StringReader(graphfile)))
 				{
@@ -234,10 +236,7 @@ public class CreateSessionAction extends BaseScopeAction
 						 * row */
 						if(cols.length != numNodes)
 						{
-							this.addFieldError("user", "Invalid file");
-	
-							/* Error page */
-							return "input";
+							return setErrorMessage("Invalid script file");
 						}
 	
 						/* Builds the connected node map */

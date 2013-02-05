@@ -7,6 +7,7 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Timer;
 import java.util.UUID;
 import java.util.concurrent.BlockingQueue;
@@ -18,6 +19,8 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 import javax.swing.text.html.HTMLDocument.HTMLReader.IsindexAction;
+
+import com.google.common.collect.TreeMultimap;
 
 import net.sf.json.JSONObject;
 
@@ -170,11 +173,17 @@ public class Session
 		final MessageDestination connectedDestinations[] = 
 						new MessageDestination[this.graph.getNumNodes()];
 		
+		
+		Map<Integer, List<MessageDestination>> destinationLists = new HashMap<>();
+		
+		for(Node node : this.graph.getNodes())
+		{
+			destinationLists.put(node.getID(), new LinkedList<MessageDestination>());
+		}
+		
 		/*  */
 		for(Node node : this.graph.getNodes())
 		{
-			List<MessageDestination> destinationList = new LinkedList<>();
-			
 			/* Message that contains a list of neighbors */
 			JSONObject neighborData = new JSONObject();
 		
@@ -182,22 +191,30 @@ public class Session
 			
 			Map<String, JSONObject> neighbors = new HashMap<>();
 			
+			System.out.printf("Building composite queue for %d\n", node.getID());
+			
 			for(Node connectedNode: this.graph.getConnectedNodes(node))
 			{
-				/* Add the node to queue the list of destinations */
-				destinationList.add(participants[connectedNode.getID()].toClientDestination);
+				List<MessageDestination> destinationList = 
+						destinationLists.get(connectedNode.getID());
+
+				destinationList.add(participants[node.getID()].toClientDestination);		
+				
 				
 				/* Adds the neighbor to the message list */
 				neighbors.put(Integer.toString(connectedNode.getID()), 
 						new JSONObject()
 								.element("id", connectedNode.getID())
 								.element("choice", (String)null));
+				
+				System.out.printf("\tConnected to %d: %s\n", connectedNode.getID(), participants[connectedNode.getID()].toClientDestination.toString());
 			}
+			
+			
 			
 			neighborData.element("neighbors", neighbors);
 		
-			connectedDestinations[node.getID()] = 
-						this.messengingService.createComposite(destinationList);
+	
 			
 			/* Sends the list of neighbors to the client */
 			participants[node.getID()].toClientDestination.sendMessage(
@@ -205,6 +222,14 @@ public class Session
 					                .element("data", neighborData)
 					                .toString());
 		}
+		
+		for(Entry<Integer, List<MessageDestination>> entry : destinationLists.entrySet())
+		{
+			connectedDestinations[entry.getKey()] = 
+					this.messengingService.createComposite(entry.getValue());
+			
+		}
+		
 		
 		/* Creates the thread pool executor */
 		ThreadPoolExecutor executor = new ThreadPoolExecutor(
@@ -286,6 +311,9 @@ public class Session
 							{
 								int participantIndex = this.participantIDToIndexMap.get(participantResult.getKey());
 							
+								System.out.printf("Node: %d sending to %s\n", 
+										participantIndex, 
+										connectedDestinations[participantIndex].getName());
 								executor.execute(
 									new NeighborUpdateTask(
 										connectedDestinations[participantIndex], 

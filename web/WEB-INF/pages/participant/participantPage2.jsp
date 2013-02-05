@@ -244,6 +244,8 @@
     	jQuery('#choices_table').append(content);
     	
     	jQuery("#choices").show();
+    	
+    	alert('Need a choice');
     }
     
     function processNeighbors(dataObject)
