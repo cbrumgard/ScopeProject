@@ -30,9 +30,17 @@ jQuery(document).ready(
 						break;
 	
 					case "#backendstorage":
-						getTestPage('/ScopeProject/admin/getBackendStoragePage');
+						getTestPage('/ScopeProject/admin/getConfigureStoragePage');
 						break;
-	
+						
+					case "#loadNamedScript":
+						getTestPage('/ScopeProject/admin/getLoadNamedScriptPage');
+						break;
+						
+					case "#loadNamedGraph":
+						getTestPage('/ScopeProject/admin/getLoadNamedGraphPage');
+						break;
+						
 					case "#createSession":
 						getTestPage('/ScopeProject/admin/getCreateSessionPage');
 						break;
@@ -74,6 +82,21 @@ jQuery(document).ready(
 					}
 				});
 
+		// Message dialog message
+		jQuery("#message-dialog").dialog(
+				{
+					autoOpen: false,
+					modal:    true,
+					buttons:
+					{
+						Ok: function()
+						{
+							// Close the dialog box 
+							jQuery(this).dialog( "close" );
+						}
+					}
+				});
+		
 		// Error dialog message
 		jQuery("#error-dialog").dialog(
 				{
@@ -120,6 +143,12 @@ function raiseStackTrace(stacktraceMsg)
 	console.log(jQuery("#stacktrace-dialog"));
 
 	jQuery("#stacktrace-dialog").dialog("open");   
+}
+
+function raiseMessageDialog(msg)
+{
+	jQuery("#message-dialog-message").html(msg);
+	jQuery("#message-dialog").dialog("open");
 }
 
 function raiseErrorDialog(errMsg)

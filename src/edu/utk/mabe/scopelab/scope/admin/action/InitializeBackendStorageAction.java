@@ -1,17 +1,9 @@
 package edu.utk.mabe.scopelab.scope.admin.action;
 
-import java.io.ByteArrayOutputStream;
-import java.io.PrintStream;
-import java.sql.SQLException;
-import java.util.Arrays;
+import net.sf.json.JSONObject;
 
-import javax.naming.NamingException;
-
-import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.math.NumberUtils;
-
-import com.opensymphony.xwork2.ActionSupport;
 
 import edu.utk.mabe.scopelab.scope.BaseScopeAction;
 import edu.utk.mabe.scopelab.scope.admin.service.StorageService;
@@ -44,9 +36,6 @@ public class InitializeBackendStorageAction extends BaseScopeAction
 	@Override
 	public String execute() throws Exception
 	{
-		String nextPage;
-
-
 		/* Initialize the backend service */
 		StorageService backendStorageService = 
 				new StorageService();
@@ -57,6 +46,8 @@ public class InitializeBackendStorageAction extends BaseScopeAction
 
 		for(Strategies strategy : validStrategies)
 		{
+			System.out.printf("strategy = %s\n", strategy.name());
+			
 			if(strategy.name().equals(this.strategy))
 			{
 				isValidStrategy = true;
@@ -66,32 +57,22 @@ public class InitializeBackendStorageAction extends BaseScopeAction
 
 		if(isValidStrategy == false)
 		{
-			this.addFieldError("strategy", "Invalid strategy");
-			nextPage = "input";
-
-			return nextPage;
+			return setErrorMessage("Invalid strategy: "+this.strategy);
 		}
 
 		int numReplicas = NumberUtils.toInt(this.replicationFactor);
 
 		if(numReplicas < 1)
 		{
-			this.addFieldError("replicationFactor", 
-					"Replication factor must be an integer > 0");
-			nextPage = "input";
-			return nextPage;
+			return setErrorMessage("Replication factor must be an integer > 0");
 		}
 
 		/* Initialize the backend storage */
 		backendStorageService.initialize(Strategies.valueOf(strategy), 
 				numReplicas);
 
-		/* Goto the backend storage page */
-		nextPage = "backendStoragePage";
-
-		
-		/* Returns the page to go to */
-		return nextPage;
+		/* Send a success full result back */
+		return setDataMessage(new JSONObject());
 	}
 
 	public String getStrategy() 

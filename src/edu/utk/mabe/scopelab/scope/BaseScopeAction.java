@@ -2,7 +2,6 @@ package edu.utk.mabe.scopelab.scope;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
-import java.io.PipedInputStream;
 import java.io.UnsupportedEncodingException;
 
 import net.sf.json.JSONObject;

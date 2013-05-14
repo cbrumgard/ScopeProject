@@ -3,8 +3,6 @@ package edu.utk.mabe.scopelab.scope.admin.action;
 
 import javax.servlet.ServletContext;
 
-
-
 import net.sf.json.JSONObject;
 
 import org.apache.struts2.util.ServletContextAware;

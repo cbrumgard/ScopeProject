@@ -1,49 +1,33 @@
 package edu.utk.mabe.scopelab.scope.admin.action;
 
-import java.io.ByteArrayOutputStream;
-import java.io.PrintStream;
+import javax.servlet.ServletContext;
 
 import edu.utk.mabe.scopelab.scope.BaseScopeAction;
 import edu.utk.mabe.scopelab.scope.admin.service.StorageService;
 
-public class GetBackendStoragePageAction extends BaseScopeAction
+public class GetBackendStoragePageAction extends BaseScopeAction 
 {
-	/* Serialization crap */
-	private static final long serialVersionUID = -3522362080870249755L;
 
-	protected boolean	isInitialized = false; 
+	/* Serialization stuff */
+	private static final long serialVersionUID = 665024698948300756L;
+
+	/* Instance variables */
+	protected ServletContext servletContext = null;
+
 	
-	
+
 	public String execute() throws Exception
 	{
-		String nextPage = null;
-
-
-		/* New BackendStorage service */
-		StorageService backendStorageService = 
-				new StorageService();
-
-		isInitialized = backendStorageService.isInitialized();
-
-		System.out.printf("isInitialized = %b\n", isInitialized);
-		/* Success */
-		nextPage = "backendStoragePage";
-
-
-
-		/* Tells struts which page to go to next */
-		return nextPage;
-	}
+		StorageService storageService = new StorageService();
+		
 	
-
-	public boolean isInitialized() 
-	{
-		return isInitialized;
-	}
-
-
-	public void setInitialized(boolean isInitialized) 
-	{
-		this.isInitialized = isInitialized;
+		if(storageService.isInitialized() == false)
+		{
+			return setErrorMessage("Storage service is not initialized");
+		}
+		
+		
+		
+		return null;
 	}
 }

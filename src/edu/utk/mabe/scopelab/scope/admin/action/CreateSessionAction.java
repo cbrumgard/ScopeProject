@@ -1,19 +1,12 @@
 package edu.utk.mabe.scopelab.scope.admin.action;
 
 import java.io.BufferedReader;
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileReader;
-import java.io.IOException;
-import java.io.LineNumberReader;
-import java.io.PrintStream;
 import java.io.StringReader;
 import java.io.UnsupportedEncodingException;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 
 import javax.servlet.ServletContext;
 
@@ -24,7 +17,6 @@ import org.apache.struts2.util.ServletContextAware;
 import edu.utk.mabe.scopelab.scope.BaseScopeAction;
 import edu.utk.mabe.scopelab.scope.ScopeError;
 import edu.utk.mabe.scopelab.scope.ScopeServer;
-import edu.utk.mabe.scopelab.scope.admin.service.StorageService;
 import edu.utk.mabe.scopelab.scope.admin.service.GraphService;
 import edu.utk.mabe.scopelab.scope.admin.service.GraphService.Graph;
 import edu.utk.mabe.scopelab.scope.admin.service.GraphService.GraphTypes;
@@ -41,13 +33,16 @@ public class CreateSessionAction extends BaseScopeAction
 	/* Class constants */
 	protected final static String EBA 			 = "EBA";
 	protected final static String USER_SPECIFIED = "USER";
-	
+	protected final static String NAMED 		 = "NAMED";
+	protected final static String FILE			 = "FILE";
+
 	/* Variables */
 	protected ServletContext servletContext = null;
 	
 	/* User input variables */
 	protected String sessionName	  = null;
 	protected String graphType 		  = null;
+	protected String scriptType		  = null;
 	protected String participantCount = null;
 	protected String initialNumNodes  = null;
 	protected String m				  = null;
@@ -66,6 +61,7 @@ public class CreateSessionAction extends BaseScopeAction
 	{
 		System.out.println("Inside of CreateSessionAction validate :-)");
 		System.out.printf("SessionName is %s\n", this.sessionName);
+		System.out.printf("ScriptType is %s\n", this.scriptType);
 		System.out.printf("Scriptfile is %s\n", this.scriptfile);
 		System.out.printf("GraphType is %s\n", this.graphType);
 		System.out.printf("initialNumNodes %s\n", initialNumNodes);
@@ -81,10 +77,38 @@ public class CreateSessionAction extends BaseScopeAction
 			return setErrorMessage("sessionName is invalid");
 		}
 		
-		if(StringUtils.isBlank(this.scriptfile))
+		if(StringUtils.isNotBlank(this.scriptType))
 		{
-			return setErrorMessage("scriptfile is invalid");
+			switch(this.scriptType)
+			{
+				case FILE:
+					
+					if(StringUtils.isBlank(this.scriptfile))
+					{
+						return setErrorMessage("scriptfile is invalid");
+					}
+					
+					break;
+					
+				case NAMED:
+					
+					if(StringUtils.isBlank(this.scriptfile))
+					{
+						return setErrorMessage("scriptfile is invalid");
+					}
+					
+					break;
+					
+				default:
+					return setErrorMessage("ScriptType is invalid");
+			}
+			
+		}else
+		{
+			return setErrorMessage("Script type is invalid");
 		}
+		
+		
 		
 		/* Graph type specified */
 		if(StringUtils.isNotBlank(this.graphType))
@@ -141,6 +165,13 @@ public class CreateSessionAction extends BaseScopeAction
 					return setErrorMessage("Must specify a file");
 				}
 				
+			}else if(this.graphType.equals(NAMED))
+			{
+				if(graphfile == null)
+				{
+					return setErrorMessage("Must specify a graph to use");
+				}
+				
 			/* Invalid graph type */
 			}else
 			{
@@ -165,6 +196,7 @@ public class CreateSessionAction extends BaseScopeAction
 		System.out.println("Inside of CreateSessionAction :-)");
 		
 		/* Variables */
+		Script script = null;
 		Graph graph = null;
 		String nextPage = "sessionsPage";
 		
@@ -179,8 +211,20 @@ public class CreateSessionAction extends BaseScopeAction
 		
 		System.out.println("Past Validate\n");
 
+		
 		/* Produces the script from the script description */
-		Script script = ScriptService.parseScript(this.scriptfile);
+		switch(scriptType)
+		{
+			case FILE:
+				script = ScriptService.parseScript(this.scriptfile);
+				break;
+				
+			case NAMED:
+				script = ScriptService.createFromName(this.scriptfile);
+				break;
+		}
+		
+		
 		
 		/* Produces the graph */
 		switch(GraphTypes.valueOf(graphType))
@@ -253,9 +297,17 @@ public class CreateSessionAction extends BaseScopeAction
 	
 					/* Creates the graph */
 					graph = GraphService.createFromUserSpecification(connectedNodes);
-			}
-
-			break;
+				}
+				
+				break;
+			
+			case NAMED:
+				
+				System.out.println("Retrieving named graphfile\n");
+				
+				graph = GraphService.createFromName(graphfile);
+				
+				break;
 		}
 
 		/* Gets the scope server */
@@ -280,6 +332,8 @@ public class CreateSessionAction extends BaseScopeAction
 		
 		/* Success */
 		System.out.println("Next page is "+nextPage);
+		
+		
 		return nextPage;
 	}
 	
@@ -301,6 +355,14 @@ public class CreateSessionAction extends BaseScopeAction
 	public void setGraphType(String graphType) 
 	{
 		this.graphType = graphType.trim();
+	}
+
+	public String getScriptType() {
+		return scriptType;
+	}
+
+	public void setScriptType(String scriptType) {
+		this.scriptType = scriptType;
 	}
 
 	public String getParticipantCount() 

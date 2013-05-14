@@ -1,31 +1,23 @@
 package edu.utk.mabe.scopelab.scope;
 
 import java.sql.SQLException;
-import java.util.Collection;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.UUID;
 
-import javax.jms.Connection;
-import javax.jms.DeliveryMode;
 import javax.jms.JMSException;
-import javax.jms.MessageProducer;
-import javax.jms.TextMessage;
-import javax.jms.Topic;
 import javax.naming.NamingException;
 
-import org.apache.commons.collections.map.HashedMap;
-
-import edu.utk.mabe.scopelab.scope.admin.service.StorageService;
 import edu.utk.mabe.scopelab.scope.admin.service.GraphService.Graph;
 import edu.utk.mabe.scopelab.scope.admin.service.ScriptService.Script;
+import edu.utk.mabe.scopelab.scope.admin.service.StorageService;
 import edu.utk.mabe.scopelab.scope.admin.service.messenging.MessengingException;
 import edu.utk.mabe.scopelab.scope.admin.service.messenging.MessengingService;
 import edu.utk.mabe.scopelab.scope.admin.service.session.Session;
 import edu.utk.mabe.scopelab.scope.admin.service.session.SessionService;
+import edu.utk.mabe.scopelab.scope.admin.service.websocket.WebSocketService;
 
 public class ScopeServer
 {
@@ -36,6 +28,8 @@ public class ScopeServer
 	final protected MessengingService messagingService;
 	final protected StorageService storageService;
 	final protected SessionService sessionService;
+	final protected WebSocketService websocketService;
+	
 	final Map<String, Session> sessionMap = new HashMap<>();
 	
 	
@@ -52,6 +46,9 @@ public class ScopeServer
 		/* Session service */
 		sessionService = new SessionService(storageService);
 		
+		/* WebSocket service */
+		websocketService = new WebSocketService();
+		
 		System.out.println("Message broker setup");
 	}
 	
@@ -61,7 +58,6 @@ public class ScopeServer
 		/* Session already exists */
 		if(storageService.doesSessionExist(sessionID) == true)
 		{
-			System.out.println("Session exists!!!");
 			throw new ScopeError("Session already exists");
 		}
 		
@@ -69,14 +65,14 @@ public class ScopeServer
 		Session session = sessionService.createSession(
 				sessionID, graph, script, messagingService, storageService);
 		
-		/* Store the session */
-		storageService.storeSession(session);
-		
 		/* Store the graph */
-		storageService.storeGraph(UUID.randomUUID(), graph);
+		storageService.storeGraph(graph);
 		
 		/* Store the script */
-		storageService.storeScript(UUID.randomUUID(), script);
+		storageService.storeScript(script);
+		
+		/* Store the session */
+		storageService.storeSession(session, graph.getGraphID(), script.getScriptID());
 		
 		/* Puts the session into the session map */
 		this.sessionMap.put(sessionID, session);
@@ -116,7 +112,7 @@ public class ScopeServer
 	}
 	
 	public void startSession(String sessionID) 
-		throws ScopeError, MessengingException
+		throws ScopeError, MessengingException, SQLException
 	{
 		Session session = sessionMap.get(sessionID);
 		
@@ -138,6 +134,10 @@ public class ScopeServer
 		return messagingService;
 	}
 	
+	public WebSocketService getWebsocketService()
+	{
+		return this.websocketService;
+	}
 	
 	public void start() 
 			throws JMSException, ClassNotFoundException, SQLException, 

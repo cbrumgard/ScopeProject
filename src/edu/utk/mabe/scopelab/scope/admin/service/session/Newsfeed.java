@@ -8,7 +8,6 @@ import java.util.TimerTask;
 
 import edu.utk.mabe.scopelab.scope.ScopeError;
 import edu.utk.mabe.scopelab.scope.admin.service.ScriptService;
-import edu.utk.mabe.scopelab.scope.admin.service.ScriptService.Script;
 import edu.utk.mabe.scopelab.scope.admin.service.messenging.MessageDestination;
 import edu.utk.mabe.scopelab.scope.admin.service.messenging.MessengingException;
 import edu.utk.mabe.scopelab.scope.admin.service.messenging.MessengingService;

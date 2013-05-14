@@ -1,7 +1,6 @@
 package edu.utk.mabe.scopelab.scope.admin.service.session;
 
 import java.util.concurrent.Callable;
-import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.FutureTask;
 
 import net.sf.json.JSONObject;

@@ -1,19 +1,13 @@
 package edu.utk.mabe.scopelab.scope.admin.interceptor;
 
 import java.io.ByteArrayInputStream;
-import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
-import java.util.HashMap;
-import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 
-import net.sf.json.JSONObject;
-import net.sf.json.util.JSONUtils;
-
 import org.apache.commons.lang3.StringUtils;
-
+import org.apache.struts2.StrutsStatics;
 
 import com.opensymphony.xwork2.ActionInvocation;
 import com.opensymphony.xwork2.ValidationAware;
@@ -21,7 +15,6 @@ import com.opensymphony.xwork2.interceptor.Interceptor;
 
 import edu.utk.mabe.scopelab.scope.JSONResponse;
 import edu.utk.mabe.scopelab.scope.admin.service.SecurityService;
-import org.apache.struts2.StrutsStatics;
 
 public class LoginInterceptor implements Interceptor
 {

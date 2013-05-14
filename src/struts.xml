@@ -81,22 +81,61 @@
             <interceptor-ref name="adminStack" />
         </action>
         
-        <action name="getBackendStoragePage" 
-                class="edu.utk.mabe.scopelab.scope.admin.action.GetBackendStoragePageAction">
+        <action name="getLoadNamedScriptPage"
+                class="edu.utk.mabe.scopelab.scope.admin.action.GetLoadScriptPage">
             <interceptor-ref name="adminStack" />
-            <result name="backendStoragePage">/WEB-INF/pages/admin/backendStoragePage.jsp</result>
+            <result name="loadNamedScriptPage">/WEB-INF/pages/admin/loadNamedScriptPage.jsp</result>
+        </action>
+        
+        <action name="loadNamedScript"
+                class="edu.utk.mabe.scopelab.scope.admin.action.LoadNamedScript">
+            <interceptor-ref name="adminStack" />
+        </action>
+        
+        <action name="getLoadNamedGraphPage"
+                class="edu.utk.mabe.scopelab.scope.admin.action.GetLoadNamedGraphPage">
+            <interceptor-ref name="adminStack" />
+            <result name="loadNamedGraphPage">/WEB-INF/pages/admin/loadNamedGraphPage.jsp</result>
+        </action>
+        
+        <action name="loadNamedGraph"
+                class="edu.utk.mabe.scopelab.scope.admin.action.LoadNamedGraph">
+            <interceptor-ref name="adminStack" />
+        </action>
+        
+        <action name="getNamedGraphList" 
+                class="edu.utk.mabe.scopelab.scope.admin.action.GetNamedGraphList">
+            <interceptor-ref name="adminStack" />
+        </action>
+        
+        <action name="getNamedScriptList" 
+                class="edu.utk.mabe.scopelab.scope.admin.action.GetNamedScriptList">
+            <interceptor-ref name="adminStack" />
+        </action>
+        
+        <action name="getConfigureStoragePage" 
+                class="edu.utk.mabe.scopelab.scope.admin.action.GetConfigureStoragePageAction">
+            <interceptor-ref name="adminStack" />
+            <result name="configureStoragePage">/WEB-INF/pages/admin/configureStoragePage.jsp</result>
         </action>
         
         <action name="InitializeBackendStorageAction"
                 class="edu.utk.mabe.scopelab.scope.admin.action.InitializeBackendStorageAction">
              <interceptor-ref name="adminStack" />
-             <result name="backendStoragePage">/WEB-INF/pages/admin/backendStoragePage.jsp</result>
+             <!--  <result name="backendStoragePage">/WEB-INF/pages/admin/backendStoragePage.jsp</result> -->
+        </action>
+        
+        <action name="getBackendStoragePage" 
+                class="edu.utk.mabe.scopelab.scope.admin.action.GetBackendStoragePageAction">
+            <interceptor-ref name="adminStack" />
         </action>
  
         <action name="logout" class="edu.utk.mabe.scopelab.scope.admin.action.LogoutAction">
             <interceptor-ref name="adminStack" />
             <result name="logout">/WEB-INF/pages/admin/logoutPage.jsp</result>
         </action>
+        
+     
         
          
         <action name="*" class="edu.utk.mabe.scopelab.scope.admin.action.GetMainPage">

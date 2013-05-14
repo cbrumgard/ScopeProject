@@ -20,6 +20,8 @@ jQuery(document).ready(
 	       
 	        for(key in adminSessionsToWatch)
 	        {
+	        	console.log("Session = "+key);
+	        	
 	        	addSessionTab(key);
 	        };
 	        

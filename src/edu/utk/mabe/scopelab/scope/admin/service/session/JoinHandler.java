@@ -6,11 +6,9 @@ import java.util.concurrent.CountDownLatch;
 
 import net.sf.json.JSONException;
 import net.sf.json.JSONObject;
-import edu.utk.mabe.scopelab.scope.admin.service.GraphService.Node;
 import edu.utk.mabe.scopelab.scope.admin.service.messenging.MessageDestination;
 import edu.utk.mabe.scopelab.scope.admin.service.messenging.MessageListener;
 import edu.utk.mabe.scopelab.scope.admin.service.messenging.MessengingException;
-import edu.utk.mabe.scopelab.scope.admin.service.session.Session.ParticipantEntry;
 
 class JoinHandler implements MessageListener
 {
@@ -34,7 +32,9 @@ class JoinHandler implements MessageListener
 	
 		this.participantCountDownLatch = new CountDownLatch(requiredNumberOfParticipants);
 		
-		this.fromClientdestinations = new MessageDestination[requiredNumberOfParticipants];				
+		this.fromClientdestinations = new MessageDestination[requiredNumberOfParticipants];		
+		
+		
 	}
 	
 	protected int getNumParticipants()

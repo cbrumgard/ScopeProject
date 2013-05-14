@@ -1,6 +1,6 @@
 package edu.utk.mabe.scopelab.scope.admin.service.messenging;
 
-import javax.jms.Destination;
+import javax.jms.Connection;
 import javax.jms.JMSException;
 import javax.jms.Message;
 import javax.jms.MessageConsumer;
@@ -8,7 +8,6 @@ import javax.jms.MessageProducer;
 import javax.jms.Session;
 import javax.jms.TextMessage;
 
-import javax.jms.Connection;
 import org.apache.activemq.command.ActiveMQQueue;
 
 public class CompositeMessageDestinationImpl implements MessageDestination 

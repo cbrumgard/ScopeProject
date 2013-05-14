@@ -1,8 +1,6 @@
 package edu.utk.mabe.scopelab.scope.admin.service.session;
 
 import java.sql.SQLException;
-import java.sql.Timestamp;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -10,7 +8,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Timer;
 import java.util.UUID;
-import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.FutureTask;
@@ -18,21 +15,15 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
-import javax.swing.text.html.HTMLDocument.HTMLReader.IsindexAction;
-
-import com.google.common.collect.TreeMultimap;
-
 import net.sf.json.JSONObject;
-
-
 import edu.utk.mabe.scopelab.scope.ScopeError;
-import edu.utk.mabe.scopelab.scope.admin.service.GraphService.Node;
-import edu.utk.mabe.scopelab.scope.admin.service.StorageService;
 import edu.utk.mabe.scopelab.scope.admin.service.GraphService.Graph;
+import edu.utk.mabe.scopelab.scope.admin.service.GraphService.Node;
 import edu.utk.mabe.scopelab.scope.admin.service.ScriptService.ChoiceEvent;
 import edu.utk.mabe.scopelab.scope.admin.service.ScriptService.Event;
 import edu.utk.mabe.scopelab.scope.admin.service.ScriptService.NewsEvent;
 import edu.utk.mabe.scopelab.scope.admin.service.ScriptService.Script;
+import edu.utk.mabe.scopelab.scope.admin.service.StorageService;
 import edu.utk.mabe.scopelab.scope.admin.service.messenging.MessageDestination;
 import edu.utk.mabe.scopelab.scope.admin.service.messenging.MessengingException;
 import edu.utk.mabe.scopelab.scope.admin.service.messenging.MessengingService;
@@ -138,7 +129,23 @@ public class Session
 		storageService.storeActiveSession(this);
 	}
 	
-	public void start() throws ScopeError, MessengingException
+	
+	void recordParticipants() throws SQLException
+	{
+		this.storageService.storeParticipants(this.sessionID, participantIDToIndexMap);
+	}
+	
+	
+	void recordChoice(int interval, int participantIndex, String choice) 
+			throws SQLException
+	{
+		System.out.printf("At interval %d, participant %d chose %s\n", 
+				interval, participantIndex, choice);
+		
+		this.storageService.storeChoice(sessionID, interval, participantIndex, choice);
+	}
+	
+	public void start() throws ScopeError, SQLException, MessengingException
 	{
 		if(this.joinHandler.getNumParticipants() < this.requiredNumOfParticpants)
 		{
@@ -154,7 +161,7 @@ public class Session
 			
 			timer = new Timer();
 		}
-	
+		
 		/*** Creates the composite  ***/  
 		List<MessageDestination> allParticipantDestinations = new LinkedList<>();
 		
@@ -230,6 +237,8 @@ public class Session
 			
 		}
 		
+		/* Records the participants */
+		this.recordParticipants();
 		
 		/* Creates the thread pool executor */
 		ThreadPoolExecutor executor = new ThreadPoolExecutor(
@@ -303,14 +312,12 @@ public class Session
 					{
 						for(Map.Entry<String, String> participantResult : participantResults.entrySet())
 						{
-							System.out.printf("%s chose %s\n", 
-									participantResult.getKey(), 
-									participantResult.getValue());
-							
 							if(this.participantIDToIndexMap.containsKey(participantResult.getKey()))
 							{
 								int participantIndex = this.participantIDToIndexMap.get(participantResult.getKey());
 							
+								this.recordChoice(i, participantIndex, participantResult.getValue());
+								
 								System.out.printf("Node: %d sending to %s\n", 
 										participantIndex, 
 										connectedDestinations[participantIndex].getName());
@@ -340,6 +347,10 @@ public class Session
 		executor.shutdown();
 	}
 	
+	public StorageService getStorageService() {
+		return storageService;
+	}
+
 	public String getJoinQueueName()
 	{
 		return this.joinHandler.getJoinQueueName();

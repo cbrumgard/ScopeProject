@@ -3,13 +3,9 @@ package edu.utk.mabe.scopelab.scope.admin.action;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
 import java.util.Enumeration;
-import java.util.LinkedList;
-import java.util.List;
 
-import edu.utk.mabe.scopelab.scope.BaseScopeAction;
-
-import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
+import edu.utk.mabe.scopelab.scope.BaseScopeAction;
 
 public class GetNetworkInterfacesAction extends BaseScopeAction 
 {

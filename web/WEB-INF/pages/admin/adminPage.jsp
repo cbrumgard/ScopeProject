@@ -109,6 +109,11 @@
         </form>
     </div>
     
+    <!-- Message dialog -->
+    <div id="message-dialog" title="Message">
+        <p id="message-dialog-message"></p>
+    </div>
+    
     <!-- Error dialog -->
     <div id="error-dialog" title="Error Message">
         <p id="error-dialog-message"></p>
@@ -142,6 +147,8 @@
 			                <a href="#backendstorage">Storage</a>
 			                <ul>
 			                    <li><a href="#backendstorage">Configure</a></li>
+			                    <li><a href="#loadNamedScript">Load Script</a></li>
+			                    <li><a href="#loadNamedGraph">Load Graph</a></li>
 			                </ul>
 			            </li>
 				        <li>

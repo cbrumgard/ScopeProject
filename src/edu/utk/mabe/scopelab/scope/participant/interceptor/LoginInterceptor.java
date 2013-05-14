@@ -6,13 +6,13 @@ import java.io.UnsupportedEncodingException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 
+import org.apache.commons.lang3.StringUtils;
+import org.apache.struts2.StrutsStatics;
+
 import com.opensymphony.xwork2.ActionInvocation;
 import com.opensymphony.xwork2.interceptor.Interceptor;
 
 import edu.utk.mabe.scopelab.scope.JSONResponse;
-
-import org.apache.commons.lang3.StringUtils;
-import org.apache.struts2.StrutsStatics;
 
 public class LoginInterceptor implements Interceptor 
 {

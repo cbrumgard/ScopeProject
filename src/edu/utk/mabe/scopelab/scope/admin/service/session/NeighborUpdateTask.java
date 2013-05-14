@@ -4,7 +4,6 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.FutureTask;
 
 import net.sf.json.JSONObject;
-
 import edu.utk.mabe.scopelab.scope.admin.service.messenging.MessageDestination;
 
 class NeighborUpdateTask extends FutureTask<Void> 

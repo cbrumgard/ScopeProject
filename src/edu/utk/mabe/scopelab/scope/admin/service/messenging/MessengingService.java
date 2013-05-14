@@ -2,41 +2,17 @@ package edu.utk.mabe.scopelab.scope.admin.service.messenging;
 
 import java.net.URI;
 import java.util.Collection;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Timer;
-import java.util.TimerTask;
 import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
 
-import javax.jms.BytesMessage;
 import javax.jms.Connection;
-import javax.jms.DeliveryMode;
-
 import javax.jms.Destination;
 import javax.jms.JMSException;
-import javax.jms.Message;
-import javax.jms.MessageConsumer;
-import javax.jms.MessageListener;
 import javax.jms.MessageProducer;
-import javax.jms.Queue;
 import javax.jms.Session;
-import javax.jms.TextMessage;
-import javax.jms.Topic;
-
-import net.sf.json.JSONObject;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
-import org.apache.activemq.broker.ProducerBrokerExchange;
 import org.apache.activemq.broker.TransportConnector;
-import org.apache.activemq.broker.region.DestinationFilter;
-import org.apache.activemq.broker.region.DestinationInterceptor;
-import org.apache.activemq.broker.region.virtual.CompositeDestinationFilter;
-import org.apache.activemq.broker.region.virtual.VirtualTopic;
-import org.apache.activemq.command.ActiveMQDestination;
-import org.apache.activemq.command.ActiveMQQueue;
 
 public class MessengingService 
 {
@@ -56,6 +32,7 @@ public class MessengingService
 	public MessengingService(String webSocketHostname, int webSocketPort) 
 			throws Exception 
 	{
+		
 		/* Forms the webSocketAddress */
 		webSocketAddress = URI.create(
 				String.format("ws://%s:%d", webSocketHostname, webSocketPort));
@@ -98,8 +75,20 @@ public class MessengingService
 	
 	public void start() throws Exception
 	{
+		try
+		{
+			
+		System.out.printf("Thread name: %s\n", Thread.currentThread().getName());
+		
 		/* Start the broker and wait for it to start before returning */
+		System.out.println("Getting ready to start the broker");
+
+		broker.setPersistent(false);
 		broker.start();
+		
+		System.out.println("Broker starting...");
+		
+		
 		broker.waitUntilStarted();
 		
 		System.out.println("Broker started");
@@ -110,6 +99,12 @@ public class MessengingService
 		
 		session = connection.createSession(false, 
 								javax.jms.Session.AUTO_ACKNOWLEDGE);
+		
+		}catch(Throwable e)
+		{
+			e.printStackTrace();
+			System.exit(-1);
+		}
 	}
 
 	public String getWebSocketURI() throws Exception

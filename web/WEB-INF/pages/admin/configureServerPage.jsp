@@ -14,6 +14,8 @@
     {
     	jQuery('#getInterfacesProgressWheelImg').toggle();
     	
+    	var startDate = new Date();
+    	
         jQuery.ajax(
             {
                 url:      "/ScopeProject/admin/getNetworkInterfacesAction",
@@ -30,37 +32,51 @@
                        case "login":
                           jQuery("#login-dialog-url").val(dataObject.data);
                           jQuery("#login-dialog").dialog("open");
+                          
+                          jQuery('#getInterfacesProgressWheelImg').toggle();
                           break;
                           
                        case "stackTrace":
                           jQuery("#stacktrace-dialog-message").html(dataObject.data);
                           jQuery("#stacktrace-dialog").dialog("open");
+                          
+                          jQuery('#getInterfacesProgressWheelImg').toggle();
                           break;
                           
                        case "error":
                           console.log(dataObject.data);
                           jQuery("#error-dialog-message").html(dataObject.data);
                           jQuery("#error-dialog").dialog("open");
+                          
+                          jQuery('#getInterfacesProgressWheelImg').toggle();
+                          
                           break;
                           
                        case "data":
                            
                            console.log("Inside of data case");
-                            
-                           jQuery("#hostname-select").empty();
                            
-                           for(var hostname in dataObject.data) 
+                           // Update the display aft
+                           setTimeout(function()
                            {
-                               console.log(hostname);
-                               
-                               jQuery("#hostname-select").append(
-                            		 "<option value='"+hostname+"'>"+hostname+"</option>");
-                           }
+	                           jQuery("#hostname-select").empty();
+	                           
+	                           for(var hostname in dataObject.data) 
+	                           {
+	                               console.log(hostname);
+	                               
+	                               jQuery("#hostname-select").append(
+	                            		 "<option value='"+hostname+"'>"+hostname+"</option>");
+	                           }
+	                           
+	                           jQuery('#getInterfacesProgressWheelImg').toggle();
+  
+                           }, Math.max(
+                        		   5000 - (new Date().getMilliseconds() - startDate.getMilliseconds()),
+                        		   0));
                            
-                           jQuery('#getInterfacesProgressWheelImg').toggle();
-                           
-                           break;
-                    }
+                           break;      
+                    }   
                 }
                 
              });

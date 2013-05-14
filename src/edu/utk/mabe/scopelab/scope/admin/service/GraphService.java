@@ -1,6 +1,6 @@
 package edu.utk.mabe.scopelab.scope.admin.service;
 
-import java.io.File;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -11,10 +11,13 @@ import java.util.Map.Entry;
 import java.util.Random;
 import java.util.UUID;
 
+import javax.naming.NamingException;
+
 import com.google.common.collect.Multimap;
 import com.google.common.collect.TreeMultimap;
 
-import edu.utk.mabe.scopelab.scope.admin.service.GraphService.Node;
+import edu.utk.mabe.scopelab.scope.ScopeError;
+import edu.utk.mabe.scopelab.scope.admin.service.GraphService.Graph;
 
 
 
@@ -24,12 +27,14 @@ public class GraphService
 	public enum GraphTypes
 	{
 		EBA,
-		USER
+		USER,
+		NAMED,
 	}
 	
 	
 	public static interface Graph
 	{
+		public UUID		getGraphID();
 		public int 		getNumNodes();
 		public boolean  containsLink(Node fromNode, Node toNode);
 		public void 	addNode(Node node);
@@ -69,16 +74,24 @@ public class GraphService
 		final protected float p;
 		final protected float q;
 		final protected Multimap<Node, Node> links = TreeMultimap.create();
-			
+		final protected UUID graphID;
 		
-		ExtendBAGraph(int numNodes, int m, float p, float q) 
+		
+		
+		ExtendBAGraph(UUID graphID, int numNodes, int m, float p, float q) 
 		{
 			this.numNodes = numNodes;
 			this.m        = m;
 			this.p        = p;
 			this.q        = q;
+			
+			this.graphID = graphID;
 		}
 
+		ExtendBAGraph(int numNodes, int m, float p, float q) 
+		{
+			this(UUID.randomUUID(), numNodes, m, p, q);
+		}
 		
 		@Override
 		public int getNumNodes() 
@@ -142,6 +155,12 @@ public class GraphService
 		public void removeLink(Node fromNode, Node toNode) 
 		{
 			links.remove(fromNode, toNode);
+		}
+		
+		@Override
+		public UUID getGraphID() 
+		{
+			return graphID;
 		}
 	}
 	
@@ -150,11 +169,18 @@ public class GraphService
 	{
 		final protected Multimap<Node, Node> links = TreeMultimap.create();
 		final protected int numNodes;
+		final protected UUID graphID;
 	
-	
-		public UserGraph(int numNodes) 
+		public UserGraph(UUID graphID, int numNodes) 
 		{
 			this.numNodes = numNodes;
+			
+			this.graphID = graphID;
+		}
+		
+		public UserGraph(int numNodes) 
+		{
+			this(UUID.randomUUID(), numNodes);
 		}
 		
 		@Override
@@ -177,8 +203,6 @@ public class GraphService
 			/* Returns the nodes */
 			return links.keySet();
 		}
-		
-		
 		
 		@Override
 		public boolean containsLink(Node fromNode, Node toNode)
@@ -219,9 +243,16 @@ public class GraphService
 		{
 			return getConnectedNodes(new Node(nodeIndex));
 		}
+		
+		@Override
+		public UUID getGraphID() 
+		{
+			return graphID;
+		}
 	}
 	
-	public static Graph createExtendedBA(int initialNumNodes, int numNodes, int m, float p, float q)
+	public static Graph createExtendedBA(UUID graphID, int initialNumNodes, 
+			int numNodes, int m, float p, float q)
 	{
 		/* Check arguments */
 		if(numNodes < 3 || numNodes < initialNumNodes || m>initialNumNodes 
@@ -233,7 +264,7 @@ public class GraphService
 		}
 		
 		/* Instance variables */
-		Graph graph = new ExtendBAGraph(numNodes, initialNumNodes, p, q);
+		Graph graph = new ExtendBAGraph(graphID, numNodes, initialNumNodes, p, q);
 		
 		Random random = new Random();
 		int nodeID    = 0;
@@ -353,7 +384,45 @@ public class GraphService
 		return graph;
 	}
 	
-	public static Graph createFromUserSpecification(
+	public static Graph createExtendedBA(int initialNumNodes, 
+			int numNodes, int m, float p, float q)
+	{
+		return createExtendedBA(UUID.randomUUID(), initialNumNodes, numNodes, 
+				m, p, q);
+	}
+	
+	public static Graph createFromUserSpecification(UUID graphID, 
+			Map<Integer, List<Integer>> connectedNodes)
+	{
+		/* Creates the graph */
+		Graph graph = new UserGraph(graphID, connectedNodes.size());
+		
+		Map<Integer, Node> nodes = new HashMap<Integer, Node>();
+				
+		/* Creates the nodes for the graph */
+		for(Integer nodeID : connectedNodes.keySet())
+		{
+			Node node = new Node(nodeID);
+			nodes.put(nodeID, node);
+			graph.addNode(node);
+		}
+		
+		/* Adds the links */
+		for(Entry<Integer, List<Integer>> linkEntrySet : connectedNodes.entrySet())
+		{
+			Node fromNode = nodes.get(linkEntrySet.getKey());
+			
+			for(Integer nodeID : linkEntrySet.getValue())
+			{
+				graph.addLink(fromNode, nodes.get(nodeID));
+			}
+		}
+		
+		/* Returns the graph */
+		return graph;
+	}
+	
+	public static Graph createFromUserSpecification( 
 			Map<Integer, List<Integer>> connectedNodes)
 	{
 		/* Creates the graph */
@@ -382,5 +451,18 @@ public class GraphService
 		
 		/* Returns the graph */
 		return graph;
+	}
+
+	public static Graph createFromName(String graphName) 
+		throws ScopeError, ClassNotFoundException, NamingException, SQLException 
+	{
+		StorageService storageService = new StorageService();
+		
+		if(storageService.isInitialized() == false)
+		{
+			throw new ScopeError("Storage service has not been initialized");
+		}
+		
+		return storageService.retrieveNamedGraph(graphName);
 	}
 }

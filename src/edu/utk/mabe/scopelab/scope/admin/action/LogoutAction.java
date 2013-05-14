@@ -5,8 +5,6 @@ import java.util.Map.Entry;
 
 import org.apache.struts2.interceptor.SessionAware;
 
-import com.opensymphony.xwork2.ActionSupport;
-
 import edu.utk.mabe.scopelab.scope.BaseScopeAction;
 
 public class LogoutAction extends BaseScopeAction implements SessionAware

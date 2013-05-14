@@ -1,10 +1,10 @@
 package edu.utk.mabe.scopelab.scope.admin.action;
 
 import javax.servlet.ServletContext;
+
 import org.apache.struts2.util.ServletContextAware;
 
 import edu.utk.mabe.scopelab.scope.BaseScopeAction;
-import edu.utk.mabe.scopelab.scope.JSONResponse;
 import edu.utk.mabe.scopelab.scope.ScopeServer;
 
 

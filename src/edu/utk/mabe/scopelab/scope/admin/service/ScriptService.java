@@ -1,24 +1,35 @@
 package edu.utk.mabe.scopelab.scope.admin.service;
 
 import java.io.IOException;
-import java.io.LineNumberReader;
 import java.io.StringReader;
+import java.lang.reflect.InvocationTargetException;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import javax.naming.NamingException;
+
+import org.apache.commons.collections.map.HashedMap;
 
 import au.com.bytecode.opencsv.CSVReader;
 
+import com.google.common.base.Joiner;
 import com.google.common.collect.Iterables;
-import com.google.common.collect.LinkedListMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.TreeMultimap;
 
 import edu.utk.mabe.scopelab.scope.ScopeError;
+import edu.utk.mabe.scopelab.scope.admin.service.GraphService.Graph;
 
 public class ScriptService 
 {
@@ -26,8 +37,9 @@ public class ScriptService
 	{
 		protected final Multimap<Integer, Event> eventsByIteration;
 		protected final Integer highestIteration;	
+		private final UUID scriptID;
 		
-		Script(Collection<Event> events)
+		Script(UUID scriptID, Collection<Event> events)
 		{
 			eventsByIteration = TreeMultimap.create(
 					
@@ -52,6 +64,7 @@ public class ScriptService
 						}
 					});
 			
+			this.scriptID = scriptID;
 			
 			
 			int highestIteration = 0;
@@ -64,6 +77,11 @@ public class ScriptService
 			}
 			
 			this.highestIteration = highestIteration;		
+		}
+		
+		Script(Collection<Event> events)
+		{
+			this(UUID.randomUUID(), events);
 		}
 		
 		public int getHighestIteration()
@@ -84,6 +102,11 @@ public class ScriptService
 		public Collection<NewsEvent> getAllNewsEvents()
 		{
 			return Lists.newArrayList(Iterables.filter(this.getAllEvents(), NewsEvent.class));
+		}
+
+		public UUID getScriptID() 
+		{
+			return scriptID;
 		}
 	}
 	
@@ -107,6 +130,50 @@ public class ScriptService
 		{
 			return this.duration;
 		}
+		
+		public static Event deserialize(String value) throws ScopeError
+		{
+			try
+			{
+				System.out.println(value);
+
+				String className = null;
+				Map<String, String> args = new HashMap<>();
+
+				Matcher matcher = Pattern.compile("class ([^:]+):<(.*?)>").matcher(value);
+
+				if(matcher.matches())
+				{
+					className = matcher.group(1);
+					String arguments = matcher.group(2);
+
+					System.out.printf("Class name = %s\n", className);
+					System.out.printf("Arguments = %s\n", arguments);
+
+
+					matcher = Pattern.compile("([^=]+)=\"([^\"]*)\",?\\s*").matcher(arguments);
+
+					while(matcher.find())
+					{
+						System.out.printf("%s = %s\n", matcher.group(1), matcher.group(2));
+						args.put(matcher.group(1), matcher.group(2));
+					}
+
+					
+					return (Event)Class.forName(className)
+								.getConstructor(Map.class).newInstance(args);
+				}
+
+				throw new ScopeError("Unable to deserialize script event");
+				
+			}catch(Throwable e)
+			{
+				e.printStackTrace();
+				throw new ScopeError("Unable to deserialize script event");
+			}
+		}
+		
+		abstract String serialize();
 	}
 	
 	public static class NewsEvent extends Event
@@ -122,10 +189,23 @@ public class ScriptService
 			this.message = message;
 		}
 
+		public NewsEvent(Map<String, String> args)
+		{
+			this(Integer.parseInt(args.get("iteration")), 
+				 Integer.parseInt(args.get("duration")), 
+				 args.get("message"));
+		}
+		
 		public String getMessage() 
 		{
 			return message;
 		}	
+		
+		public String serialize()
+		{
+			return String.format("%s:<iteration=\"%d\", duration=\"%d\", message=\"%s\">",
+					this.getClass(), this.iteration, this.duration, this.message);
+		}
 	}
 	
 	public static class ChoiceEvent extends Event
@@ -146,6 +226,26 @@ public class ScriptService
 			this.choices      = choices;
 		}
 
+		public ChoiceEvent(Map<String, String> args)
+		{
+			super(Integer.parseInt(args.get("iteration")), 
+				  Integer.parseInt(args.get("duration")));
+			
+			this.participants = new LinkedList<>();
+			
+			System.out.printf("Participants = %s\n", args.get("participants"));
+			
+			for(String participant : args.get("participants").split(","))
+			{
+				System.out.printf("Adding participant = %s\n", participant);
+				this.participants.add(Integer.parseInt(participant));
+			}
+			
+			this.choices = Arrays.asList(args.get("choices").split(","));
+			
+			this.message = args.get("message");
+		}
+		
 		public Collection<Integer> getParticipants() 
 		{
 			return participants;
@@ -159,6 +259,18 @@ public class ScriptService
 		public Collection<String> getChoices() 
 		{
 			return choices;
+		}
+		
+		public String serialize()
+		{
+			System.out.printf("participants = %s\n", this.participants);
+			System.out.printf("choices = %s\n", this.choices);
+			return String.format("%s:<iteration=\"%d\", duration=\"%d\", message=\"%s\", "+
+							    "participants=\"%s\", choices=\"%s\">",
+							    this.getClass(), this.iteration, this.duration, 
+							    this.message,
+							    Joiner.on(',').join(this.participants), 
+							    Joiner.on(',').join(this.choices));
 		}
 	}
 	
@@ -267,5 +379,18 @@ public class ScriptService
 		{	
 			throw new ScopeError(e.getMessage());
 		}
+	}
+	
+	public static Script createFromName(String scriptName) 
+			throws ScopeError, ClassNotFoundException, NamingException, SQLException 
+	{
+		StorageService storageService = new StorageService();
+		
+		if(storageService.isInitialized() == false)
+		{
+			throw new ScopeError("Storage sercice has not been initialized");
+		}
+		
+		return storageService.retrieveNamedScript(scriptName);
 	}
 }

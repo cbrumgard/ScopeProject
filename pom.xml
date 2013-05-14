@@ -91,16 +91,6 @@
   		<version>2.3</version>
   	</dependency>
   	<dependency>
-  		<groupId>org.apache.cassandra</groupId>
-  		<artifactId>cassandra-clientutil</artifactId>
-  		<version>1.2.0</version>
-  	</dependency>
-  	<dependency>
-  		<groupId>org.apache.cassandra</groupId>
-  		<artifactId>cassandra-thrift</artifactId>
-  		<version>1.2.0</version>
-  	</dependency>
-  	<dependency>
   		<groupId>com.thoughtworks.xstream</groupId>
   		<artifactId>xstream</artifactId>
   		<version>1.4.4</version>
@@ -134,6 +124,21 @@
   		<groupId>commons-beanutils</groupId>
   		<artifactId>commons-beanutils</artifactId>
   		<version>20030211.134440</version>
+  	</dependency>
+  	<dependency>
+  		<groupId>org.apache.cassandra</groupId>
+  		<artifactId>cassandra-clientutil</artifactId>
+  		<version>1.2.2</version>
+  	</dependency>
+  	<dependency>
+  		<groupId>org.apache.cassandra</groupId>
+  		<artifactId>cassandra-thrift</artifactId>
+  		<version>1.2.2</version>
+  	</dependency>
+  	<dependency>
+  		<groupId>commons-codec</groupId>
+  		<artifactId>commons-codec</artifactId>
+  		<version>1.7</version>
   	</dependency>
   </dependencies>
 </project>
